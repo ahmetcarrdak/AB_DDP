@@ -1,0 +1,317 @@
+.menu {
+    background: var(--menu-background);
+    display: flex;
+    flex-direction: column;
+    width: 350px;
+    transition: .5s;
+    padding-top: 10px;
+    position: relative;
+}
+
+.menuHeader, .menuHeaderLeft {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    width: 70px;
+}
+
+.menuHeaderRight {
+    padding-right: 10px;
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.menuSearchContainer {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    background: #ffffff;
+    width: 86%;
+    margin: 10px auto;
+    border-radius: 15px;
+}
+
+.menuSearchContainer > input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    outline: none;
+    color: #6c6c6c;
+}
+
+.menu-search-icons {
+    display: flex;
+    color: #BBBBBB;
+    align-items: center;
+    justify-content: center;
+}
+
+.menuSearchIcon {
+    font-size: 20px;
+}
+
+.menu-items-dropdown {
+    padding: 0 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.menu-items-dropdown > .rotate {
+    transform: rotate(-90deg);
+}
+
+.menu-items {
+    padding: 0 15px;
+    overflow: hidden;
+    height: 0;
+    transition: .3s height;
+    overflow-y: auto;
+}
+
+/* Scrollbar stili */
+.menu-items::-webkit-scrollbar {
+    width: 4px; /* Scrollbar genişliği */
+}
+
+.menu-items::-webkit-scrollbar-thumb {
+    background-color: #ccc; /* Scrollbar kaydırma çubuğu rengi */
+    border-radius: 4px; /* Scrollbar köşe yuvarlama */
+}
+
+.menu-items::-webkit-scrollbar-thumb:hover {
+    background-color: #888; /* Hover durumunda kaydırma çubuğu rengi */
+}
+
+.menu-items::-webkit-scrollbar-track {
+    background-color: #f1f1f1; /* Scrollbar arka plan rengi */
+    border-radius: 4px; /* Arka plan köşe yuvarlama */
+}
+
+.menu-items.active {
+    height: 38vh;
+}
+
+.menu-items-subject {
+    padding: 10px 5px;
+    color: #757575;
+    font-size: 14px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    justify-content: space-between;
+    cursor: pointer;
+    color: var(--menu-text-color);
+    border-left: 1px solid #ddd;
+    transition: .3s;
+
+}
+
+.menu-item-icon {
+    color: #333333;
+    transition: .3s;
+}
+
+.menu-item-list-container {
+    overflow: hidden;
+    margin-top: 0;
+    padding: 0;
+    height: 0;
+    border-left: 1px solid #ddd;
+    transition: .3s;
+}
+
+.menu-link {
+    color: var(--menu-text-color);
+}
+
+.sub-menu-item {
+    margin-left: 30%;
+}
+
+.menu-item-list-container.active {
+    height: auto;
+}
+
+.sub-menu-item.active {
+    color: #7ED321;
+}
+
+.menu-item-container.active,
+.menu-item:hover,
+.menu-item.active {
+    border-left: 1px solid #7ED321;
+}
+
+.menu-item-container.active > a > .menu-item > .menu-item-icon:nth-child(2) {
+    transform: rotate(90deg);
+}
+
+
+.menu-footer-icons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.menu-footer {
+    position: absolute;
+    width: 100%;
+    bottom: 10px;
+    font-size: 17px;
+}
+
+.menu-footer-item > a {
+    color: #333333;
+    position: relative;
+}
+
+.menu-profile {
+    align-self: center;
+    background: var(--background-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 90%;
+    margin: 5px auto;
+    padding: 7px;
+    border-radius: 13px;
+}
+
+.menu-profile-photo {
+    width: 40px;
+    border-radius: 50%;
+}
+
+.menu-footer-profile-left {
+    display: flex;
+    align-items: center;
+}
+
+.menu-profile-left-label {
+    margin-left: 10px;
+}
+
+.menu-profile-left-label > div:first-child {
+    font-size: 14px;
+    color: #333333;
+}
+
+.menu-profile-left-label > div:nth-child(2) {
+    font-size: 12px;
+    color: #757575;
+}
+
+.menu-profile {
+    cursor: pointer;
+}
+
+.menu-footer-notification {
+    position: absolute;
+    top: -10px;
+    right: -8px;
+    background: #7ED321;
+    color: #FFFFFF;
+    padding: 1px 5px;
+    border-radius: 50%;
+    font-size: 14px;
+}
+
+.menu-widgets {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.menu-widget {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-left: 5px;
+    margin-bottom: 5px;
+    color: #333333;
+    font-size: 20px;
+}
+
+.menu-widget-badge {
+    font-size: 16px;
+    margin-top: 15px;
+}
+
+.menu-widget:first-child {
+    background: #73F44A;
+}
+
+.menu-widget:hover {
+    background: #F5F5F5;
+}
+
+.logoutContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.logoutContainer-card {
+    background: #F0F0F0;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    margin: 0 auto;
+}
+
+.logoutContainer-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #e36767;
+    text-align: center;
+}
+
+.logoutContainer-text {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #6c6c6c;
+    text-align: center;
+}
+
+.logoutContainer-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.logoutContainer-cancel, .logoutContainer-logout {
+    background: #7ED321;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100px;
+    margin-left: 5px;
+}
+
+.logoutContainer-logout {
+    background: #e36767;
+}

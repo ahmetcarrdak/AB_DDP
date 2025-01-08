@@ -1,0 +1,83 @@
+/* Genel ayarlar */
+body, html {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+.auth-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #F1F1F1;
+    color: #6b6a6a;
+}
+
+.auth-background {
+    background-color: #F1F1F1;
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.auth-logo {
+    width: 100px;
+    height: 80px;
+    margin-bottom: 20px;
+}
+
+.auth-title {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-input {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+}
+
+.auth-input:focus {
+    outline: none;
+    border: 1px solid #aaa;
+}
+
+.auth-links {
+    text-align: right;
+}
+
+.auth-forgot {
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    display: block;
+    color: #6b6a6a;
+}
+
+.auth-button {
+    background-color: #7ED321;
+    color: #fff;
+    padding: 10px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.auth-button:hover {
+    background-color: #7ED321;
+}

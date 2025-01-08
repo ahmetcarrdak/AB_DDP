@@ -1,0 +1,67 @@
+:root {
+    /* Primary Colors */
+    --primary-color: #4A90E2; /* Mavi - Ana renk */
+    --secondary-color: #50E3C2; /* Yeşil - İkincil renk */
+
+    /* Neutrals */
+    --background-color: #FFFFFF; /* Arka plan rengi (açık gri) */
+    --primary-text-color: #333333; /* Ana yazı rengi (koyu gri) */
+    --secondary-text-color: #666666; /* İkincil yazı rengi (orta gri) */
+    --tertiary-text-color: #A0A0A0; /* Açık gri yazı rengi */
+    --border-color: #DDDDDD; /* Sınır çizgileri için gri */
+
+    /* Accent Colors */
+    --button-primary-bg: #4A90E2; /* Ana buton arka plan rengi */
+    --button-primary-text: #FFFFFF; /* Ana buton yazı rengi */
+    --button-secondary-bg: #50E3C2; /* İkincil buton arka plan rengi */
+    --button-secondary-text: #FFFFFF; /* İkincil buton yazı rengi */
+    --button-danger-bg: #D0021B; /* Tehlike buton arka plan rengi (Kırmızı) */
+    --button-danger-text: #FFFFFF; /* Tehlike buton yazı rengi */
+
+    /* Alert Colors */
+    --alert-success-bg: #7ED321; /* Başarı mesajı arka plan rengi */
+    --alert-success-text: #FFFFFF; /* Başarı mesajı yazı rengi */
+    --alert-warning-bg: #F5A623; /* Uyarı mesajı arka plan rengi */
+    --alert-warning-text: #FFFFFF; /* Uyarı mesajı yazı rengi */
+    --alert-error-bg: #D0021B; /* Hata mesajı arka plan rengi */
+    --alert-error-text: #FFFFFF; /* Hata mesajı yazı rengi */
+
+    /* Card & Widget Colors */
+    --card-background: #FFFFFF; /* Kartlar ve widget'lar için arka plan rengi */
+    --card-shadow: rgba(0, 0, 0, 0.1); /* Kart gölge rengi */
+    --widget-header-bg: #F1F1F1; /* Widget başlık arka plan rengi */
+    --widget-border-color: #E0E0E0; /* Widget sınır rengi */
+
+    /* Menu Colors */
+    --menu-background: #F1F1F1; /* Menü arka plan rengi */
+    --menu-text-color: #707070; /* Menü yazı rengi */
+    --menu-hover-bg: #F0F0F0; /* Menü hover arka plan rengi */
+    --menu-hover-text-color: #4A90E2; /* Menü hover yazı rengi */
+    --menu-border-color: #DDDDDD; /* Menü sınır rengi */
+    --menu-active-bg: #4A90E2; /* Menü aktif öğesi arka plan rengi */
+    --menu-active-text-color: #FFFFFF; /* Menü aktif öğesi yazı rengi */
+
+    /* Navigation */
+    --nav-background: #E6E9EE; /* Navigasyon arka planı (koyu renk) */
+    --nav-background-secondry: #F5EADC;
+    --nav-text-color: #FFFFFF; /* Navigasyon yazı rengi */
+    --nav-hover-bg: #4A90E2; /* Navigasyon hover arka plan rengi */
+
+    /* Footer */
+    --footer-background: #333333; /* Alt bilgi arka plan rengi */
+    --footer-text-color: #FFFFFF; /* Alt bilgi yazı rengi */
+
+    /* Hover Colors */
+    --hover-bg: #F4F6F9; /* Hover arka plan rengi */
+    --hover-border: #BBBBBB; /* Hover sınır rengi */
+
+    /* Card Specific Colors */
+    --card-header-bg: #F7F7F7; /* Kart başlık arka plan rengi */
+    --card-header-text-color: #333333; /* Kart başlık yazı rengi */
+    --card-body-bg: #FFFFFF; /* Kart gövde arka plan rengi */
+    --card-footer-bg: #F9F9F9; /* Kart alt kısmı arka plan rengi */
+    --card-border-color: #DDDDDD; /* Kart sınır rengi */
+
+    /* Widgets */
+    --widget-background-color: #73F44A;
+}

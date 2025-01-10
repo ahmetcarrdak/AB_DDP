@@ -40,7 +40,7 @@ export const menus = [
         id: 2,
         title: "Depo",
         icon: icons.depo,
-        action: "/",
+        action: "/store",
     },
     {
         id: 3,
@@ -104,7 +104,7 @@ export const searchs = [
         id: 2,
         title: "Depo İşlemleri",
         description: "Depo işlemleri için tıklayın",
-        action: "/",
+        action: "/store",
         icon: icons.depo
     },
     {
@@ -125,7 +125,7 @@ export const searchs = [
         id: 5,
         title: "Malzeme Yönetimi",
         description: "Malzeme listesini ve işlemlerini düzenleyin",
-        action: "/",
+        action: "/store",
         icon: icons.malzemeYönetim
     },
     {

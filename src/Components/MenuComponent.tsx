@@ -122,12 +122,12 @@ const MenuComponent = memo(() => {
                 </div>
 
                 <div className="menu-widgets">
-                    <Link to={""} className="menu-widget">
+                    <Link to={"/"} className="menu-widget">
                         <RxDashboard className="menu-widget-icon"/>
                         <span className="menu-widget-badge">Panel</span>
                     </Link>
 
-                    <Link to={""} className="menu-widget">
+                    <Link to={"/store"} className="menu-widget">
                         <FiDatabase className="menu-widget-icon"/>
                         <span className="menu-widget-badge">Depo</span>
                     </Link>

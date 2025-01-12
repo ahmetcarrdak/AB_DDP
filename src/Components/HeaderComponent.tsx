@@ -1,4 +1,4 @@
-import React, {memo, useState, useEffect} from 'react'
+import React, {memo, useState, useEffect} from 'react';
 import {MdHomeFilled, MdWidgets} from "react-icons/md";
 import {CiStar} from "react-icons/ci";
 import {HiOutlineDotsHorizontal} from "react-icons/hi";
@@ -9,15 +9,15 @@ import {
     IoSettings,
     IoWarningOutline
 } from "react-icons/io5";
-
-import {Link} from "react-router-dom"
-import {searchs, navMenus} from "../Settings"
+import {Link, useLocation} from "react-router-dom"; // useLocation eklendi
+import {searchs, navMenus} from "../Settings";
 
 const HeaderComponent = memo(() => {
     const [searchTerm, setSearchTerm] = useState("");
     const [isFocused, setIsFocused] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState<number>(2);
     const [activeDotsModal, setActiveDotsModal] = useState(false);
+    const location = useLocation(); // Mevcut yolu kontrol etmek için useLocation
 
     const handleMenuClick = (menuId: number) => {
         setActiveMenuId(menuId);
@@ -29,7 +29,7 @@ const HeaderComponent = memo(() => {
 
     const handleDotsActive = () => {
         setActiveDotsModal(!activeDotsModal);
-    }
+    };
 
     useEffect(() => {
         const handleDocumentClick = (event: MouseEvent) => {
@@ -44,7 +44,6 @@ const HeaderComponent = memo(() => {
             document.removeEventListener("click", handleDocumentClick);
         };
     }, []);
-
 
     return (
         <div className={"header-component"}>
@@ -124,22 +123,25 @@ const HeaderComponent = memo(() => {
                 </div>
             </div>
             <div className="header-footer">
-                <div className="header-footer-item">
-                    <IoSettings/>
-                </div>
-                {
-                    navMenus.map((menu) => (
-                        <div
-                            className={`header-footer-item ${activeMenuId === menu.id ? "active" : ""}`}
-                            key={menu.id}
-                            onClick={() => handleMenuClick(menu.id)}>
-                            <span>{menu.title}</span>
+                {location.pathname === "/" && (
+                    <>
+                        <div className="header-footer-item">
+                            <IoSettings/>
                         </div>
-                    ))
-                }
+                        {navMenus.map((menu) => (
+                            <div
+                                className={`header-footer-item ${activeMenuId === menu.id ? "active" : ""}`}
+                                key={menu.id}
+                                onClick={() => handleMenuClick(menu.id)}
+                            >
+                                <span>{menu.title}</span>
+                            </div>
+                        ))}
+                    </>
+                )}
             </div>
         </div>
-    )
-})
-export default HeaderComponent
+    );
+});
 
+export default HeaderComponent;

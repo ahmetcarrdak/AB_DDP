@@ -46,48 +46,48 @@ export const menus = [
         id: 3,
         title: "Firma Ayarları",
         icon: icons.firmaSettings,
-        action: "/",
+        action: "/company-settings",
     },
     {
         id: 4,
         title: "Personel Yönetim",
         icon: icons.personelYönetim,
-        action: "/",
+        action: "#",
         subMenu: [
-            {id: 4.1, title: "Personelleri yönet", action: "/"},
-            {id: 4.2, title: "Peronel oluştur", action: "/"},
+            {id: 4.1, title: "Personelleri yönet", action: "/person"},
+            {id: 4.2, title: "Peronel oluştur", action: "/person-create"},
         ],
     },
     {
         id: 5,
         title: "Malzeme Yönetim",
         icon: icons.malzemeYönetim,
-        action: "/",
+        action: "#",
         subMenu: [
-            {id: 5.1, title: "Malzemeleri yönet", action: "/"},
-            {id: 5.2, title: "Mazleme oluştur", action: "/"},
+            {id: 5.1, title: "Malzemeleri yönet", action: "/material"},
+            {id: 5.2, title: "Mazleme oluştur", action: "/material-add"},
         ],
     },
     {
         id: 6,
         title: "Sipariş Yönetim",
         icon: icons.siparişYönetim,
-        action: "/",
+        action: "#",
         subMenu: [
-            {id: 6.1, title: "Siparişleri yönet", action: "/"},
-            {id: 6.2, title: "Sipariş durumları", action: "/"},
-            {id: 6.3, title: "Sipariş oluştur", action: "/"},
+            {id: 6.1, title: "Siparişleri yönet", action: "/order"},
+            {id: 6.2, title: "Sipariş durumları", action: "/order-status"},
+            {id: 6.3, title: "Sipariş oluştur", action: "/order-create"},
         ],
     },
     {
         id: 7,
         title: "İş Yönetim",
         icon: icons.işYönetim,
-        action: "/",
+        action: "#",
         subMenu: [
-            {id: 7.1, title: "İşleri yönet", action: "/"},
-            {id: 7.2, title: "İş durumları", action: "/"},
-            {id: 7.3, title: "İş oluştur", action: "/"},
+            {id: 7.1, title: "İşleri yönet", action: "/work"},
+            {id: 7.2, title: "İş durumları", action: "/work-status"},
+            {id: 7.3, title: "İş oluştur", action: "/work-create"},
         ],
     },
 ];
@@ -111,28 +111,28 @@ export const searchs = [
         id: 3,
         title: "Firma Ayarları",
         description: "Firma özelliklerini düzenleyin",
-        action: "/",
+        action: "/company-settings",
         icon: icons.firmaSettings
     },
     {
         id: 4,
         title: "Personel Yönetimi",
         description: "Personel listesini ve işlemlerini düzenleyin",
-        action: "/",
+        action: "/person",
         icon: icons.personelYönetim
     },
     {
         id: 5,
         title: "Malzeme Yönetimi",
         description: "Malzeme listesini ve işlemlerini düzenleyin",
-        action: "/store",
+        action: "/material",
         icon: icons.malzemeYönetim
     },
     {
         id: 6,
         title: "Sipariş Yönetimi",
         description: "Sipariş listesini ve işlemlerini düzenleyin",
-        action: "/",
+        action: "/order",
         icon: icons.siparişYönetim
     }
 ];

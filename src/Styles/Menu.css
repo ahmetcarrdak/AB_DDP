@@ -6,6 +6,9 @@
     transition: .5s;
     padding-top: 10px;
     position: relative;
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 100;
+    font-style: normal;
 }
 
 .menuHeader, .menuHeaderLeft {

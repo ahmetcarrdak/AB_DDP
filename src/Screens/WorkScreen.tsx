@@ -201,9 +201,9 @@ const WorkScreen = memo(() => {
                         <tbody>
                             {paginatedData.length > 0 ? (
                                 paginatedData.map((work) => (
-                                    <React.Fragment key={work.id}>
-                                        <tr onClick={() => toggleRow(work.id)} className={"table-tbody"}>
-                                            <td>{work.id}</td>
+                                    <React.Fragment key={work.workId}>
+                                        <tr onClick={() => toggleRow(work.workId)} className={"table-tbody"}>
+                                            <td>{work.workId}</td>
                                             {columns.map((col) => (
                                                 <td key={col.data} className={"table-tbody-td"}>
                                                     {col.data === 'isActive' ?
@@ -213,7 +213,7 @@ const WorkScreen = memo(() => {
                                             ))}
                                         </tr>
 
-                                        {expandedRow === work.id && (
+                                        {expandedRow === work.workId && (
                                             <tr>
                                                 <td colSpan={columns.length + 1}>
                                                     <div className="table-detail-container">

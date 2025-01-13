@@ -48,7 +48,7 @@ const HeaderComponent = memo(() => {
     return (
         <div className={"header-component"}>
             <div className="menu-header-nav">
-                <MdHomeFilled/> / Dashboard / Home
+                <MdHomeFilled/> / Dashboard {location.pathname}
             </div>
             <div className="header-body">
                 <div className="header-body-left">

@@ -13,8 +13,8 @@ const domain = "http://localhost:5262/api/";
 export const apiUrl = {
     person : `${domain}Person/all`,
     store: `${domain}Store/all`,
-    companySettings: `${domain}CompanySettings/all`,
     order: `${domain}Order/all`,
+    work : `${domain}Work/all`
 }
 
 const icons = {

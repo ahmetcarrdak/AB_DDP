@@ -22,7 +22,7 @@ import {CiDiscount1} from "react-icons/ci";
 import {GrInfo} from "react-icons/gr";
 import {IoIosAlbums, IoIosArrowForward, IoIosCheckmark} from "react-icons/io";
 import {LiaTimesSolid} from "react-icons/lia";
-import {apiUrl} from "./../Settings"
+import {apiUrl} from "../Settings"
 
 // Veriyi sayfalama işlemi
 const paginateData = (data: any[], currentPage: number, itemsPerPage: number) => {

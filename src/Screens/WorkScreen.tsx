@@ -6,6 +6,8 @@ import 'jspdf-autotable';
 import {FaInfoCircle} from 'react-icons/fa';
 import {MdOutlineArrowBackIosNew, MdOutlineArrowForwardIos} from "react-icons/md";
 import {IoIosArrowForward} from "react-icons/io";
+import {apiUrl} from "../Settings"
+
 
 const paginateData = (data: any[], currentPage: number, itemsPerPage: number) => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -82,7 +84,7 @@ const WorkScreen = memo(() => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://localhost:5262/api/Work/all');
+                const response = await axios.get(apiUrl.work);
                 setData(response.data);
                 setLoading(false);
             } catch (error) {

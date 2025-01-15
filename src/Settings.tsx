@@ -8,16 +8,13 @@ import {FcProcess} from "react-icons/fc";
 import {FaNetworkWired} from "react-icons/fa";
 import {FiDatabase} from "react-icons/fi";
 
-const domain = "";
+const domain = "http://localhost:5262/api/";
 
-const apiUrl = {
-    dashboard: "https://api.example.com/dashboard",
-    depo: "https://api.example.com/depo",
-    firmaSettings: "https://api.example.com/firma-ayarları",
-    personelYönetim: "https://api.example.com/personel-yonetim",
-    malzemeYönetim: "https://api.example.com/malzeme-yonetim",
-    işYönetim: "https://api.example.com/iş-yonetim",
-    siparişYönetim: "https://api.example.com/sipariş-yonetim",
+export const apiUrl = {
+    person : `${domain}Person/all`,
+    store: `${domain}Store/all`,
+    companySettings: `${domain}CompanySettings/all`,
+    order: `${domain}Order/all`,
 }
 
 const icons = {

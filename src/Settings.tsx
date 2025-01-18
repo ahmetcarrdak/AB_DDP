@@ -12,9 +12,16 @@ const domain = "http://localhost:5262/api/";
 
 export const apiUrl = {
     person : `${domain}Person/all`,
+    createPerson: `${domain}Person/create`,
+    personById: `${domain}Person`,
+    personUpdate: `${domain}Person/update`,
+    positions: `${domain}Positions`,
     store: `${domain}Store/all`,
+    storeById: `${domain}Store`,
+    storeUpdate: `${domain}Store/update`,
     order: `${domain}Order/all`,
-    work : `${domain}Work/all`
+    work : `${domain}Work/all`,
+    station: `${domain}Station/GetAll`
 }
 
 const icons = {
@@ -41,50 +48,46 @@ export const menus = [
     },
     {
         id: 3,
-        title: "Firma Ayarları",
-        icon: icons.firmaSettings,
-        action: "/company-settings",
-    },
-    {
-        id: 4,
         title: "Personel Yönetim",
         icon: icons.personelYönetim,
         action: "#",
         subMenu: [
-            {id: 4.1, title: "Personelleri yönet", action: "/person"},
-            {id: 4.2, title: "Peronel oluştur", action: "/person-create"},
+            {id: 3.1, title: "Personelleri yönet", action: "/person"},
+            {id: 3.2, title: "Peronel oluştur", action: "/person-create"},
+            {id: 3.3, title: "Personel güncelle", action: "/person-update"},
         ],
     },
     {
-        id: 5,
+        id: 4,
         title: "Malzeme Yönetim",
         icon: icons.malzemeYönetim,
         action: "#",
         subMenu: [
-            {id: 5.1, title: "Malzemeleri yönet", action: "/material"},
-            {id: 5.2, title: "Mazleme oluştur", action: "/material-add"},
+            {id: 4.1, title: "Depoyu yönet", action: "/store"},
+            {id: 4.2, title: "Mazleme Ekle", action: "/material-add"},
+            {id: 4.3, title: "Mazleme güncelle", action: "/material-update"},
         ],
     },
     {
-        id: 6,
+        id: 5,
         title: "Sipariş Yönetim",
         icon: icons.siparişYönetim,
         action: "#",
         subMenu: [
-            {id: 6.1, title: "Siparişleri yönet", action: "/order"},
-            {id: 6.2, title: "Sipariş durumları", action: "/order-status"},
-            {id: 6.3, title: "Sipariş oluştur", action: "/order-create"},
+            {id: 5.1, title: "Siparişleri yönet", action: "/order"},
+            {id: 5.2, title: "Sipariş durumları", action: "/order-status"},
+            {id: 5.3, title: "Yeni sipariş talimatı", action: "/order-create"},
         ],
     },
     {
-        id: 7,
+        id: 6,
         title: "İş Yönetim",
         icon: icons.işYönetim,
         action: "#",
         subMenu: [
-            {id: 7.1, title: "İşleri yönet", action: "/work"},
-            {id: 7.2, title: "İş durumları", action: "/work-status"},
-            {id: 7.3, title: "İş oluştur", action: "/work-create"},
+            {id: 6.1, title: "İşleri yönet", action: "/work"},
+            {id: 6.2, title: "İş durumları", action: "/work-status"},
+            {id: 6.3, title: "Yeni iş talimatı", action: "/work-create"},
         ],
     },
 ];

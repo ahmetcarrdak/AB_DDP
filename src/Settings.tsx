@@ -15,12 +15,23 @@ export const apiUrl = {
     createPerson: `${domain}Person/create`,
     personById: `${domain}Person`,
     personUpdate: `${domain}Person/update`,
+
     positions: `${domain}Positions`,
+
     store: `${domain}Store/all`,
     storeById: `${domain}Store`,
+    createStore: `${domain}Store`,
     storeUpdate: `${domain}Store/update`,
+
     order: `${domain}Order/all`,
+    orderById: `${domain}Order`,
+    createOrder: `${domain}Order/create`,
+    orderUpdate: `${domain}Order`,
+
     work : `${domain}Work/all`,
+    workById: `${domain}Work`,
+    createWork: `${domain}Work/create`,
+    workUpdate: `${domain}Work/update`,
     station: `${domain}Station/GetAll`
 }
 
@@ -75,8 +86,9 @@ export const menus = [
         action: "#",
         subMenu: [
             {id: 5.1, title: "Siparişleri yönet", action: "/order"},
-            {id: 5.2, title: "Sipariş durumları", action: "/order-status"},
-            {id: 5.3, title: "Yeni sipariş talimatı", action: "/order-create"},
+            {id: 5.2, title: "Sipariş Güncelle", action: "/order-update"},
+            {id: 5.3, title: "Sipariş durumları", action: "/order-status"},
+            {id: 5.4, title: "Yeni sipariş talimatı", action: "/order-create"},
         ],
     },
     {

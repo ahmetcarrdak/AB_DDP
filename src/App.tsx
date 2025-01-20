@@ -1,6 +1,4 @@
-import React, { useState } from "react";
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Screens
@@ -19,6 +17,8 @@ import WorkCreateScreen from "./Screens/Create/WorkCreateScreen";
 import WorkStatus from "./Screens/Status/WorkStatus";
 import OrderCreateScreen from "./Screens/Create/OrderCreateScreen";
 import OrderStatus from "./Screens/Status/OrderStatus";
+import OrderUpdateById from "./Screens/Update/OrderUpdateById";
+import OrderUpdate from "./Screens/Update/OrderUpdate";
 import CompanySettingsScreen from "./Screens/CompanySettingsScreen";
 import PersonCreate from "./Screens/Create/PersonCreateScreen";
 import PersonUpdateById from "./Screens/Update/PersonUpdateById";
@@ -65,6 +65,9 @@ function App() {
             <Route path="/order" element={<OrderScreen />} />
             <Route path="/order-create" element={<OrderCreateScreen />} />
             <Route path="/order-status" element={<OrderStatus />} />
+            <Route path="/order-update-order/:id" element={<OrderUpdateById />} />
+            <Route path="/order-update" element={<OrderUpdate />} />
+
             <Route path="/work" element={<WorkScreen />} />
             <Route path="/work-create" element={<WorkCreateScreen />} />
             <Route path="/work-status" element={<WorkStatus />} />

@@ -1,7 +1,5 @@
 import React, { memo, useEffect, useState } from "react";
 import axios from "axios";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
 import {
   BarChart,
   Bar,
@@ -18,11 +16,11 @@ import { IoIosAlbums, IoIosArrowForward, IoIosCheckmark } from "react-icons/io";
 import { LiaTimesSolid } from "react-icons/lia";
 import { apiUrl } from "../../Settings";
 
-interface PersonDetailProps {
+interface StoreDetailProps {
   id: number;
 }
 
-const StoreDetail = memo(({ id }: PersonDetailProps) => {
+const StoreDetail = memo(({ id }: StoreDetailProps) => {
   const [data, setData] = useState<any[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

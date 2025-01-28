@@ -7,6 +7,7 @@ import {
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
 } from "react-icons/md";
+import { Spin } from "antd";
 import { apiUrl } from "../Settings";
 import WorkDetail from "../Components/TableDetailComponent/WorkDetail";
 
@@ -45,10 +46,10 @@ const WorkScreen = memo(() => {
   const [sortAscending, setSortAscending] = useState(true);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
- 
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(apiUrl.work);
         setData(response.data);
@@ -91,7 +92,6 @@ const WorkScreen = memo(() => {
   const toggleRow = (workId: number) => {
     setExpandedRow(expandedRow === workId ? null : workId);
   };
-
 
   return (
     <div className="screen">
@@ -136,38 +136,34 @@ const WorkScreen = memo(() => {
           </button>
         </div>
 
-        <table className="table">
-          <thead className={"table-thead"}>
-            <tr>
-              <th>#</th>
-              {columns.map((column) => (
-                <th
-                  key={column.data}
-                  onClick={() => handleSort(column.data)}
-                  className={"table-thead-th"}
-                >
-                  {column.title}{" "}
-                  {sortColumn === column.data && (sortAscending ? "↑" : "↓")}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          {loading ? (
-            <tbody>
+        <Spin spinning={loading} tip="Loading...">
+          <table className="table">
+            <thead className={"table-thead"}>
               <tr>
-                <td colSpan={columns.length + 1}>Veriler yükleniyor...</td>
+                <th>#</th>
+                {columns.map((column) => (
+                  <th
+                    key={column.data}
+                    onClick={() => handleSort(column.data)}
+                    className={"table-thead-th"}
+                  >
+                    {column.title}{" "}
+                    {sortColumn === column.data && (sortAscending ? "↑" : "↓")}
+                  </th>
+                ))}
+                <th>#</th>
               </tr>
-            </tbody>
-          ) : (
+            </thead>
+
             <tbody>
-              {paginatedData.length > 0 ? (
-                paginatedData.map((work) => (
+              {paginatedData.length > 0 &&
+                paginatedData.map((work, index) => (
                   <React.Fragment key={work.workId}>
                     <tr
                       onClick={() => toggleRow(work.workId)}
                       className={"table-tbody"}
                     >
-                      <td>{work.workId}</td>
+                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                       {columns.map((col) => (
                         <td key={col.data} className={"table-tbody-td"}>
                           {col.data === "isActive"
@@ -177,6 +173,17 @@ const WorkScreen = memo(() => {
                             : work[col.data]}
                         </td>
                       ))}
+                      <td>
+                        <a
+                          href={`work-update-work/${work.workId}`}
+                          className="edit-row-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          Düzenle
+                        </a>
+                      </td>
                     </tr>
 
                     {expandedRow === work.workId && (
@@ -189,21 +196,10 @@ const WorkScreen = memo(() => {
                       </tr>
                     )}
                   </React.Fragment>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={columns.length + 1}
-                    style={{ textAlign: "center" }}
-                  >
-                    Veri bulunamadı
-                  </td>
-                </tr>
-              )}
+                ))}
             </tbody>
-          )}
-        </table>
-
+          </table>
+        </Spin>
         <div
           className="pagination"
           style={{

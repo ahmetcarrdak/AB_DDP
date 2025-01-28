@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -10,6 +11,8 @@ import {
 } from "react-icons/md";
 import { apiUrl } from "../Settings";
 import StoreDetail from "../Components/TableDetailComponent/StoreDetail";
+import { BsDatabaseFill, BsDatabaseFillAdd } from "react-icons/bs";
+import { AiFillFileAdd, AiOutlineFilePdf } from "react-icons/ai";
 
 // Veriyi sayfalama işlemi
 const paginateData = (
@@ -137,8 +140,23 @@ const StoreScreen = memo(() => {
               <option value={200}>200</option>
             </select>
             <button onClick={downloadPDF} className={"table-action-button"}>
-              PDF Olarak İndir
+              <AiOutlineFilePdf />
+              <span style={{ paddingLeft: 10 }}>PDF Olarak İndir</span>
             </button>
+            <Link to={"/material-add"} className="table-action-button">
+              <BsDatabaseFill />
+              <span style={{ paddingLeft: 10 }}>Malzeme ekle</span>
+            </Link>
+            <button className="table-action-button">
+              <AiFillFileAdd />
+              <span style={{ paddingLeft: 10 }}> Malzemeleri içe aktar</span>
+            </button>
+            <Link to={"/work-create"} className="table-action-button">
+              <BsDatabaseFillAdd />
+              <span style={{ paddingLeft: 10 }}>
+                Yeni malzeme talebi oluştur
+              </span>
+            </Link>
           </div>
 
           <table className="table">

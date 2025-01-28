@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -7,9 +8,11 @@ import {
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
 } from "react-icons/md";
+import { IoIosAdd } from "react-icons/io";
 import { apiUrl } from "./../Settings";
 import OrderDetail from "../Components/TableDetailComponent/OrderDetail";
 import { Spin } from "antd";
+import { AiOutlineFilePdf } from "react-icons/ai";
 
 const paginateData = (
   data: any[],
@@ -63,10 +66,9 @@ const OrderScreen = memo(() => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, []);
-  
 
   const columns = [
     { title: "Sipariş No", data: "orderId" },
@@ -138,8 +140,13 @@ const OrderScreen = memo(() => {
               }}
               className={"table-action-button"}
             >
-              PDF Olarak İndir
+              <AiOutlineFilePdf />
+              <span style={{ paddingLeft: 10 }}>PDF Olarak İndir</span>
             </button>
+            <Link to={"/order-create"} className={"table-action-button"}>
+              <IoIosAdd />
+              <span style={{ paddingLeft: 10 }}>Sipariş Ekle</span>
+            </Link>
           </div>
 
           <table className="table">
@@ -156,29 +163,29 @@ const OrderScreen = memo(() => {
                     {sortColumn === column.data && (sortAscending ? "↑" : "↓")}
                   </th>
                 ))}
-              <th>#</th>
+                <th>#</th>
               </tr>
             </thead>
-           
-              <tbody>
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((order, index) => (
-                    <React.Fragment key={order.orderId}>
-                      <tr
-                        onClick={() => toggleRow(order.orderId)}
-                        className={"table-tbody"}
-                      >                    
+
+            <tbody>
+              {paginatedData.length > 0 ? (
+                paginatedData.map((order, index) => (
+                  <React.Fragment key={order.orderId}>
+                    <tr
+                      onClick={() => toggleRow(order.orderId)}
+                      className={"table-tbody"}
+                    >
                       <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        {columns.map((col) => (
-                          <td key={col.data} className={"table-tbody-td"}>
-                            {col.data === "isActive"
-                              ? order[col.data]
-                                ? "Aktif"
-                                : "Pasif"
-                              : order[col.data]}
-                          </td>
-                        ))}
-                        <td>
+                      {columns.map((col) => (
+                        <td key={col.data} className={"table-tbody-td"}>
+                          {col.data === "isActive"
+                            ? order[col.data]
+                              ? "Aktif"
+                              : "Pasif"
+                            : order[col.data]}
+                        </td>
+                      ))}
+                      <td>
                         <a
                           href={`order-update-order/${order.orderId}`}
                           className="edit-row-button"
@@ -189,30 +196,30 @@ const OrderScreen = memo(() => {
                           Düzenle
                         </a>
                       </td>
-                      </tr>
+                    </tr>
 
-                      {expandedRow === order.orderId && (
-                        <tr>
-                          <td colSpan={columns.length + 1}>
-                            <div className="table-detail-container">
-                              <OrderDetail id={order.orderId} />
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={columns.length + 1}
-                      style={{ textAlign: "center" }}
-                    >
-                      Veri bulunamadı
-                    </td>
-                  </tr>
-                )}
-              </tbody>
+                    {expandedRow === order.orderId && (
+                      <tr>
+                        <td colSpan={columns.length + 1}>
+                          <div className="table-detail-container">
+                            <OrderDetail id={order.orderId} />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={columns.length + 1}
+                    style={{ textAlign: "center" }}
+                  >
+                    Veri bulunamadı
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </table>
 
           <div

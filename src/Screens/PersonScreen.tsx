@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -7,6 +8,11 @@ import {
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
 } from "react-icons/md";
+import {
+  AiOutlineFilePdf,
+  AiOutlineUserAdd,
+  AiOutlineUsergroupAdd,
+} from "react-icons/ai";
 import { Spin } from "antd";
 import { apiUrl } from "../Settings";
 import PersonDetail from "../Components/TableDetailComponent/PersonDetail";
@@ -130,7 +136,16 @@ const PersonScreen = memo(() => {
               <option value={200}>200</option>
             </select>
             <button onClick={downloadPDF} className="table-action-button">
+              <AiOutlineFilePdf />
               PDF Olarak İndir
+            </button>
+            <Link to={"/person-create"} className="table-action-button">
+              <AiOutlineUserAdd />
+              Personel Ekle
+            </Link>
+            <button className="table-action-button">
+              <AiOutlineUsergroupAdd />
+              Personelleri içe aktar
             </button>
           </div>
 

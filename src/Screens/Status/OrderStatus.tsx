@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from "react";
-import { Select, Timeline, Card, Typography } from "antd";
+import { Select, Timeline, Card, Typography, Tag } from "antd";
 import axios from "axios";
 import { apiUrl } from "../../Settings";
 
@@ -18,45 +18,77 @@ interface Order {
   orderDate: string;
   customerName: string;
   productName: string;
+  stagesId: number; // Added to match the stages data
+}
+
+interface Stage {
+  stageId: number;
+  stageName: string;
+}
+
+interface StationInfo {
   stationId: number;
+  stagesId: number;
+  orderId: number;
+  productName: string;
+  customerName: string;
+  specialInstructions: string;
+  priority: string;
+  assignedEmployeeId: number;
+  quantity: number;
+  estimatedDeliveryDate: string;
+  actualDeliveryDate: string;
 }
 
 const OrderStatus = memo(() => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
+  const [stages, setStages] = useState<Stage[]>([]);
+  const [stationInfo, setStationInfo] = useState<StationInfo | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [currentStation, setCurrentStation] = useState<number | null>(null);
 
   useEffect(() => {
-    // Fetch stations
-    const fetchStations = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await axios.get<Station[]>(apiUrl.station);
-        setStations(response.data);
-        console.log(response.data);
+        const [stationsResponse, ordersResponse] = await Promise.all([
+          axios.get<Station[]>(apiUrl.station),
+          axios.get<Order[]>(apiUrl.order),
+        ]);
+
+        // Directly use the stages data passed from the backend
+        const stagesData: Stage[] = [
+          { stageId: 1, stageName: "Onay Bekliyor" },
+          { stageId: 3, stageName: "Bitirildi" },
+          { stageId: 4, stageName: "Çıkışı Yapıldı" },
+          { stageId: 2, stageName: "İşleme Alındı" }
+        ];
+
+        setStations(
+          stationsResponse.data.sort((a, b) => a.orderNumber - b.orderNumber)
+        );
+        setOrders(ordersResponse.data);
+        setStages(stagesData);
       } catch (error) {
-        console.error("Error fetching stations:", error);
+        console.error("Error fetching initial data:", error);
       }
     };
 
-    // Fetch orders
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get<Order[]>(apiUrl.order);
-        setOrders(response.data);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
-    };
-
-    fetchStations();
-    fetchOrders();
+    fetchInitialData();
   }, []);
 
-  const handleOrderChange = (orderId: string) => {
-    const order = orders.find((o) => o.orderId === parseInt(orderId));
-    setSelectedOrder(order || null);
-    setCurrentStation(order?.stationId || null);
+  const handleOrderChange = async (orderId: string) => {
+    try {
+      const order = orders.find((o) => o.orderId === parseInt(orderId));
+      setSelectedOrder(order || null);
+
+      const stationInfoResponse = await axios.get<StationInfo>(
+        `${apiUrl.stationInfoOrder}/${orderId}`
+      );
+      setStationInfo(stationInfoResponse.data);
+    } catch (error) {
+      console.error("Error fetching station info:", error);
+      setStationInfo(null);
+    }
   };
 
   const filterOption = (
@@ -65,6 +97,11 @@ const OrderStatus = memo(() => {
   ) => {
     if (!option) return false;
     return option.label.toLowerCase().includes(input.toLowerCase());
+  };
+
+  const getCurrentStage = (stagesId: number) => {
+    const stage = stages.find(s => s.stageId === stagesId);
+    return stage ? stage.stageName : "Bilinmeyen Aşama";
   };
 
   return (
@@ -87,37 +124,57 @@ const OrderStatus = memo(() => {
         />
       </Card>
 
-      {selectedOrder && (
-        <Timeline
-          mode="alternate"
-          items={stations
-            .sort((a, b) => a.orderNumber - b.orderNumber)
-            .map((station) => {
-              const currentStationObj = stations.find(
-                (s) => s.stationId === currentStation
-              );
-              const currentStationOrderNumber =
-                currentStationObj?.orderNumber || 0;
+      {selectedOrder && stationInfo && (
+        <Card>
+          <div style={{ marginBottom: "20px" }}>
+            <Title level={4}>Sipariş Detayları</Title>
+            <p>
+              <strong>Ürün:</strong> {stationInfo.productName}
+            </p>
+            <p>
+              <strong>Müşteri:</strong> {stationInfo.customerName}
+            </p>
+            <p>
+              <strong>Miktar:</strong> {stationInfo.quantity}
+            </p>
+            <p>
+              <strong>Öncelik:</strong>{" "}
+              <Tag color={stationInfo.priority === "Yüksek" ? "red" : "green"}>
+                {stationInfo.priority}
+              </Tag>
+            </p>
+            <p>
+              <strong>İstasyonda ki Aşama:</strong>{" "}
+              <Tag color="blue">{getCurrentStage(stationInfo.stagesId)}</Tag>
+            </p>
+            <p>
+              <strong>Tahmini Teslimat:</strong>{" "}
+              {stationInfo.estimatedDeliveryDate}
+            </p>
+            <p>
+              <strong>Özel Talimatlar:</strong>{" "}
+              {stationInfo.specialInstructions}
+            </p>
+          </div>
 
-              return {
-                color:
-                  station.stationId === currentStation
-                    ? "blue"
-                    : station.orderNumber < currentStationOrderNumber
-                    ? "green"
-                    : "gray",
-                children: (
-                  <div>
-                    <h4>{station.name}</h4>
-                    <p>{station.description}</p>
-                    {station.stationId === currentStation && (
-                      <strong>Aktif İstasyon</strong>
-                    )}
-                  </div>
-                ),
-              };
-            })}
-        />
+          <Title level={4}>İstasyon Süreci</Title>
+          <Timeline
+            mode="alternate"
+            items={stations.map((station) => ({
+              color:
+                station.stationId === stationInfo.stationId ? "blue" : "gray",
+              children: (
+                <div>
+                  <h4>{station.name}</h4>
+                  <p>{station.description}</p>
+                  {station.stationId === stationInfo.stationId && (
+                    <strong>Aktif İstasyon</strong>
+                  )}
+                </div>
+              ),
+            }))}
+          />
+        </Card>
       )}
     </div>
   );

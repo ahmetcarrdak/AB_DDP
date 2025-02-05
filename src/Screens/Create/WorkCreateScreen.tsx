@@ -17,50 +17,43 @@ import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 // Type definitions to resolve TypeScript errors
-interface Department {
-  departmentId: number;
-  departmentName: string;
-}
-
 interface Person {
   id: number;
   firstName: string;
   lastName: string;
 }
 
-const workStatuses = ["Pending", "In Progress", "Completed", "Cancelled"];
-const workPriorities = ["Low", "Medium", "High", "Critical"];
+const workPriorities = ["Düşük", "Normal", "Yüksek", "Kritik"];
 
 const WorkCreateScreen = memo(() => {
   const [form] = Form.useForm();
   const [persons, setPersons] = useState<Person[]>([]);
 
   useEffect(() => {
-    const fetchDepartmentsAndPersons = async () => {
+    const fetchPersons = async () => {
       try {
         const personsResponse = await axios.get(`${apiUrl.person}`);
-
         setPersons(personsResponse.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Veriler yüklenirken bir hata oluştu", {
+        console.error("Error fetching persons:", error);
+        toast.error("ÇalMetaryelanlar yüklenirken bir hata oluştu", {
           position: "bottom-right",
           autoClose: 3000,
           theme: "colored",
         });
       }
     };
-    fetchDepartmentsAndPersons();
+    fetchPersons();
   }, []);
 
   const onFinish = async (values: any) => {
     try {
-      const response = await axios.post(apiUrl.createWork, values);
-      toast.success("İş başarıyla oluşturuldu", {
+      await axios.post(apiUrl.createWork, values);
+      toast.success("Metaryel başarıyla oluşturuldu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
@@ -68,7 +61,7 @@ const WorkCreateScreen = memo(() => {
       form.resetFields();
     } catch (error) {
       console.error("Error creating work:", error);
-      toast.error("İş oluşturulurken bir hata oluştu", {
+      toast.error("Metaryel oluşturulurken bir hata oluştu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
@@ -77,198 +70,150 @@ const WorkCreateScreen = memo(() => {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <ToastContainer />
+      <div style={{ padding: "20px" }}>
+        <ToastContainer />
+        <Title level={2}>Yarı Mamül İş Emri Oluştur</Title>
+        <Card>
+          <Form
+              form={form}
+              layout="vertical"
+              onFinish={onFinish}
+              initialValues={{
+                isActive: true,
+                requiresApproval: false,
+                isRecurring: false,
+                hasSafetyRisks: false,
+              }}
+          >
+            {/* Metaryel Bilgileri */}
+            <SectionTitle title="Metaryel Bilgileri" />
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item
+                    name="workName"
+                    label="Metaryel Adı"
+                    rules={[{ required: true, message: "Lütfen Metaryel adını giriniz" }]}
+                >
+                  <Input maxLength={100} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item name="description" label="Açıklama">
+                  <Input.TextArea maxLength={500} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item name="priority" label="Öncelik">
+                  <Select placeholder="Öncelik seçiniz">
+                    {workPriorities.map((priority) => (
+                        <Option key={priority} value={priority}>
+                          {priority}
+                        </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
 
-      <Title level={2}>Yeni İş Oluştur</Title>
+            {/* ÇalMetaryelan ve Ekipman Bilgileri */}
+            <SectionTitle title="ÇalMetaryelan ve Ekipman Bilgileri" />
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item name="assignedEmployeeId" label="Çalışacak Personel">
+                  <Select
+                      placeholder="Çalışacak personelleri seçiniz"
+                      options={persons.map((person) => ({
+                        value: person.id,
+                        label: `${person.firstName} ${person.lastName}`,
+                      }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item name="requiredEquipment" label="Gerekli Ekipman">
+                  <Input maxLength={200} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item name="requiredMaterials" label="Gerekli Malzemeler">
+                  <Input maxLength={200} />
+                </Form.Item>
+              </Col>
+            </Row>
 
-      <Card>
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={{
-            isActive: true,
-            requiresApproval: false,
-            isRecurring: false,
-            hasSafetyRisks: false,
-          }}
-        >
-          <Row gutter={16}>
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item
-                name="workName"
-                label="İş Adı"
-                rules={[{ required: true, message: "Lütfen iş adını giriniz" }]}
-              >
-                <Input maxLength={100} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="description" label="Açıklama">
-                <Input.TextArea maxLength={500} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="startDate" label="Başlangıç Tarihi">
-                <DatePicker style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="dueDate" label="Bitiş Tarihi">
-                <DatePicker style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="status" label="Durum">
-                <Select placeholder="Durum seçiniz">
-                  {workStatuses.map((status) => (
-                    <Option key={status} value={status}>
-                      {status}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="priority" label="Öncelik">
-                <Select placeholder="Öncelik seçiniz">
-                  {workPriorities.map((priority) => (
-                    <Option key={priority} value={priority}>
-                      {priority}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
- 
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="assignedEmployeeId" label="Çalışan">
-                <Select
-                  placeholder="Çalışan seçiniz"
-                  options={persons.map((person) => ({
-                    value: person.id,
-                    label: `${person.firstName} ${person.lastName}`,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="location" label="Lokasyon">
-                <Input maxLength={100} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="estimatedCost" label="Tahmini Maliyet">
-                <InputNumber
-                  style={{ width: "100%" }}
-                  formatter={(value) =>
-                    `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            {/* Tekrarlanan Metaryel ve Güvenlik Riski */}
+            <SectionTitle title="Tekrarlanan Metaryel ve Güvenlik Riski" />
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item
+                    name="isRecurring"
+                    label="Tekrarlanan Metaryel"
+                    valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item
+                    noStyle
+                    shouldUpdate={(prevValues, currentValues) =>
+                        prevValues.isRecurring !== currentValues.isRecurring
+                    }
+                >
+                  {({ getFieldValue }) =>
+                      getFieldValue("isRecurring") ? (
+                          <Form.Item name="recurrencePattern" label="Tekrar Sıklığı">
+                            <Select placeholder="Sıklık seçiniz">
+                              <Option value="Daily">Günlük</Option>
+                              <Option value="Weekly">Haftalık</Option>
+                              <Option value="Monthly">Aylık</Option>
+                              <Option value="Yearly">Yıllık</Option>
+                            </Select>
+                          </Form.Item>
+                      ) : null
                   }
-                  parser={(value) => value!.replace(/₺\s?|(,*)/g, "")}
-                />
-              </Form.Item>
-            </Col>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item
+                    name="hasSafetyRisks"
+                    label="Güvenlik Riski"
+                    valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="estimatedDuration" label="Tahmini Süre (Saat)">
-                <InputNumber style={{ width: "100%" }} min={0} />
-              </Form.Item>
-            </Col>
+            {/* Notlar */}
+            <SectionTitle title="Notlar" />
+            <Row gutter={16}>
+              <Col xs={24}>
+                <Form.Item name="notes" label="Notlar">
+                  <Input.TextArea maxLength={500} />
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="requiredEquipment" label="Gerekli Ekipman">
-                <Input maxLength={200} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="requiredMaterials" label="Gerekli Malzemeler">
-                <Input maxLength={200} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={4}>
-              <Form.Item name="isActive" label="Aktif" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={4}>
-              <Form.Item
-                name="isRecurring"
-                label="Tekrarlanan İş"
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={4}>
-              <Form.Item
-                noStyle
-                shouldUpdate={(prevValues, currentValues) =>
-                  prevValues.isRecurring !== currentValues.isRecurring
-                }
-              >
-                {({ getFieldValue }) =>
-                  getFieldValue("isRecurring") ? (
-                    <Form.Item name="recurrencePattern" label="Tekrar Sıklığı">
-                      <Select placeholder="Sıklık seçiniz">
-                        <Option value="Daily">Günlük</Option>
-                        <Option value="Weekly">Haftalık</Option>
-                        <Option value="Monthly">Aylık</Option>
-                        <Option value="Yearly">Yıllık</Option>
-                      </Select>
-                    </Form.Item>
-                  ) : null
-                }
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={4}>
-              <Form.Item
-                name="requiresApproval"
-                label="Onay Gerekli"
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={4}>
-              <Form.Item
-                name="hasSafetyRisks"
-                label="Güvenlik Riski"
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24}>
-              <Form.Item name="notes" label="Notlar">
-                <Input.TextArea maxLength={500} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Kaydet
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
-    </div>
+            {/* Kaydet Butonu */}
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Kaydet
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </div>
   );
 });
 
 export default WorkCreateScreen;
+
+// Alt bileşenler
+const SectionTitle = ({ title }: { title: string }) => (
+    <Col xs={24}>
+      <Text strong style={{ fontSize: "16px", display: "block", marginBottom: "16px" }}>
+        {title}
+      </Text>
+    </Col>
+);

@@ -1,10 +1,9 @@
-import React, { memo, useEffect, useState } from "react";
-import { Select, Timeline, Card, Typography } from "antd";
+import React, { memo, useEffect, useState, useMemo } from "react";
+import { Table, Card, Typography } from "antd";
 import axios from "axios";
 import { apiUrl } from "../../Settings";
 
-const { Option } = Select;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface Station {
   stationId: number;
@@ -15,108 +14,103 @@ interface Station {
 
 interface Work {
   workId: number;
-  workDate: string;
-  customerName: string;
-  productName: string;
-  stationId: number;
+  workName: string;
+  stagesId: number;
+  description: string;
 }
 
 const WorkStatus = memo(() => {
-  const [works, setWorks] = useState<Work[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
-  const [selectedWork, setSelectedWork] = useState<Work | null>(null);
-  const [currentStation, setCurrentStation] = useState<number | null>(null);
+  const [worksByStation, setWorksByStation] = useState<{ [key: number]: Work[] }>({});
+  const [selectedWork, setSelectedWork] = useState<Work | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Verileri çekme işlemi
   useEffect(() => {
-    // Fetch stations
-    const fetchStations = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await axios.get<Station[]>(apiUrl.station);
-        setStations(response.data);
-        console.log(response.data);
+        const [stationsResponse, worksResponse] = await Promise.all([
+          axios.get<Station[]>(apiUrl.station),
+          axios.get<Work[]>(apiUrl.stationInfoWork),
+        ]);
+
+        // İstasyonları sırala
+        const sortedStations = stationsResponse.data.sort((a, b) => a.orderNumber - b.orderNumber);
+        setStations(sortedStations);
+
+        // İşleri istasyonlara göre grupla
+        const groupedWorks: { [key: number]: Work[] } = {};
+        worksResponse.data.forEach((work) => {
+          if (!groupedWorks[work.stagesId]) {
+            groupedWorks[work.stagesId] = [];
+          }
+          groupedWorks[work.stagesId].push(work);
+        });
+
+        setWorksByStation(groupedWorks);
       } catch (error) {
-        console.error("Error fetching stations:", error);
+        console.error("Veri çekme hatası:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    // Fetch works
-    const fetchWorks = async () => {
-      try {
-        const response = await axios.get<Work[]>(apiUrl.work);
-        setWorks(response.data);
-      } catch (error) {
-        console.error("Error fetching works:", error);
-      }
-    };
-
-    fetchStations();
-    fetchWorks();
+    fetchInitialData();
   }, []);
 
-  const handleWorkChange = (workId: string) => {
-    const work = works.find((w) => w.workId === parseInt(workId));
-    setSelectedWork(work || null);
-    setCurrentStation(work?.stationId || null);
-  };
+  // Tablo sütunlarını oluştur
+  const columns = useMemo(() => {
+    return stations.map((station) => ({
+      title: station.name,
+      dataIndex: station.stationId,
+      render: (works: Work[]) =>
+          works && works.length > 0 ? (
+              works.map((work) => (
+                  <p
+                      key={work.workId}
+                      style={{ cursor: "pointer", color: "blue" }}
+                      onClick={() => setSelectedWork(work)}
+                  >
+                    {work.workName}
+                  </p>
+              ))
+          ) : (
+              <Text>-</Text>
+          ),
+    }));
+  }, [stations]);
 
-  const filterOption = (
-    input: string,
-    option?: { label: string; value: string }
-  ) => {
-    if (!option) return false;
-    return option.label.toLowerCase().includes(input.toLowerCase());
-  };
+  // Tablo verilerini oluştur
+  const data = useMemo(() => {
+    return Object.keys(worksByStation).map((stageId, index) => {
+      const rowData: { [key: string]: any } = { key: index };
+      stations.forEach((station) => {
+        rowData[station.stationId] = worksByStation[parseInt(stageId)]?.filter(
+            (work) => work.stagesId === station.stationId
+        );
+      });
+      return rowData;
+    });
+  }, [worksByStation, stations]);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Title level={2}>İş Durumu</Title>
-
-      <Card style={{ marginBottom: "20px" }}>
-        <Select
-          style={{ width: "100%" }}
-          placeholder="İş Seçiniz"
-          onChange={handleWorkChange}
-          showSearch
-          filterOption={filterOption}
-          options={works.map((work) => ({
-            value: work.workId.toString(),
-            label: `${work.workDate.substring(0, 10)} - ${
-              work.customerName
-            } - ${work.productName}`,
-          }))}
-        />
-      </Card>
-
-      {selectedWork && (
-        <Timeline
-          mode="alternate"
-          items={stations
-            .sort((a, b) => a.orderNumber - b.orderNumber)
-            .map((station) => {
-              const currentStationObj = stations.find(
-                (s) => s.stationId === currentStation
-              );
-              const currentStationOrderNumber =
-                currentStationObj?.orderNumber || 0;
-
-              return {
-                color:
-                  station.stationId === currentStation
-                    ? "blue"
-                    : station.orderNumber < currentStationOrderNumber
-                    ? "green"
-                    : "gray",
-                children: (
-                  <div>
-                    <h4>{station.name}</h4>
-                    <p>{station.description}</p>
-                  </div>
-                ),
-              };
-            })}
-        />
-      )}
-    </div>
+      <div style={{ padding: "20px" }}>
+        <Title level={2}>İstasyonlar ve Yarı Mamüller</Title>
+        {isLoading ? (
+            <Card>
+              <Text>Yükleniyor...</Text>
+            </Card>
+        ) : (
+            <Table columns={columns} dataSource={data} pagination={false} bordered />
+        )}
+        {selectedWork && (
+            <Card title={`İş Detayı - ${selectedWork.workName}`} style={{ marginTop: "20px" }}>
+              <p>
+                <strong>Açıklama:</strong> {selectedWork.description}
+              </p>
+            </Card>
+        )}
+      </div>
   );
 });
 

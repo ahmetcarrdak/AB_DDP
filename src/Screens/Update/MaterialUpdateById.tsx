@@ -21,7 +21,6 @@ import { useParams } from "react-router-dom";
 
 const { Title } = Typography;
 
-
 const MaterialUpdateById = () => {
   const { id } = useParams<{ id: string }>();
   const [form] = Form.useForm();
@@ -42,10 +41,8 @@ const MaterialUpdateById = () => {
           purchaseDate: data.purchaseDate ? dayjs(data.purchaseDate) : null,
           expiryDate: data.expiryDate ? dayjs(data.expiryDate) : null,
           lastInventoryDate: data.lastInventoryDate
-            ? dayjs(data.lastInventoryDate)
-            : null,
-          createdDate: data.createdDate ? dayjs(data.createdDate) : null,
-          updatedDate: data.updatedDate ? dayjs(data.updatedDate) : null,
+              ? dayjs(data.lastInventoryDate)
+              : null,
         };
 
         form.setFieldsValue(updatedData);
@@ -70,16 +67,14 @@ const MaterialUpdateById = () => {
       const formattedValues = {
         ...values,
         purchaseDate: values.purchaseDate
-          ? values.purchaseDate.toISOString()
-          : null,
+            ? values.purchaseDate.toISOString()
+            : null,
         expiryDate: values.expiryDate ? values.expiryDate.toISOString() : null,
         lastInventoryDate: values.lastInventoryDate
-          ? values.lastInventoryDate.toISOString()
-          : null,
-        createdDate: values.createdDate ? values.createdDate.toISOString() : null,
-        updatedDate: values.updatedDate ? values.updatedDate.toISOString() : null,
+            ? values.lastInventoryDate.toISOString()
+            : null,
       };
-      console.log(formattedValues);
+
       await axios.put(`${apiUrl.storeUpdate}`, formattedValues);
       toast.success("Malzeme başarıyla güncellendi", {
         position: "bottom-right",
@@ -101,129 +96,163 @@ const MaterialUpdateById = () => {
   if (!id) return null;
 
   return (
-    <div className="material-update-page">
-      <ToastContainer />
-      <Title level={2}>Malzeme Bilgileri Düzenle</Title>
-      <Spin spinning={isLoadingMaterial} tip="Malzeme bilgileri yükleniyor...">
-        <Card>
-          <Form form={form} layout="vertical" onFinish={onFinish}>
-            <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="name" label="Malzeme Adı" rules={[{ required: true }]}>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="storeId" hidden>
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="description" label="Açıklama">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="category" label="Kategori">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="quantity" label="Miktar" rules={[{ type: "number" }]}>
-                  <InputNumber style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="unitPrice" label="Birim Fiyatı" rules={[{ type: "number" }]}>
-                  <InputNumber style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="unit" label="Birim">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="location" label="Lokasyon">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="supplierInfo" label="Tedarikçi Bilgisi">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="purchaseDate" label="Satın Alma Tarihi">
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="expiryDate" label="Son Kullanma Tarihi">
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="barcode" label="Barkod">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="serialNumber" label="Seri Numarası">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="isActive" label="Aktif Mi" valuePropName="checked">
-                  <Switch />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="minimumStockLevel" label="Minimum Stok Seviyesi">
-                  <InputNumber style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="maximumStockLevel" label="Maksimum Stok Seviyesi">
-                  <InputNumber style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="weight" label="Ağırlık">
-                  <InputNumber style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="dimensions" label="Boyutlar">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="storageConditions" label="Depolama Koşulları">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="lastInventoryDate" label="Son Envanter Tarihi">
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="qualityStatus" label="Kalite Durumu">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" loading={isUpdating}>
-                    Güncelle
-                  </Button>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-        </Card>
-      </Spin>
-    </div>
+      <div style={{ padding: "20px" }}>
+        <ToastContainer />
+        <Title level={2}>Malzeme Bilgileri Düzenle</Title>
+        <Spin spinning={isLoadingMaterial} tip="Malzeme bilgileri yükleniyor...">
+          <Card>
+            <Form form={form} layout="vertical" onFinish={onFinish}>
+              {/* Temel Bilgiler */}
+              <SectionTitle title="Temel Bilgiler" />
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item
+                      name="name"
+                      label="Malzeme Adı"
+                      rules={[{ required: true, message: "Lütfen malzeme adını giriniz" }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="storeId" hidden>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="description" label="Açıklama">
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="category" label="Kategori">
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item
+                      name="quantity"
+                      label="Miktar"
+                      rules={[{ required: true, message: "Lütfen miktarı giriniz" }]}
+                  >
+                    <InputNumber style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item
+                      name="unitPrice"
+                      label="Birim Fiyatı"
+                      rules={[{ required: true, message: "Lütfen birim fiyatını giriniz" }]}
+                  >
+                    <InputNumber style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item
+                      name="unit"
+                      label="Birim"
+                      rules={[{ required: true, message: "Lütfen birimi giriniz" }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Depolama ve Tedarik Bilgileri */}
+              <SectionTitle title="Depolama ve Tedarik Bilgileri" />
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item
+                      name="location"
+                      label="Lokasyon"
+                      rules={[{ required: true, message: "Lütfen lokasyonu giriniz" }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="supplierInfo" label="Tedarikçi Bilgisi">
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="purchaseDate" label="Satın Alma Tarihi">
+                    <DatePicker style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="expiryDate" label="Son Kullanma Tarihi">
+                    <DatePicker style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Stok ve Envanter Bilgileri */}
+              <SectionTitle title="Stok ve Envanter Bilgileri" />
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item
+                      name="minimumStockLevel"
+                      label="Minimum Stok Seviyesi"
+                      rules={[{ required: true, message: "Lütfen minimum stok seviyesini giriniz" }]}
+                  >
+                    <InputNumber style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item
+                      name="maximumStockLevel"
+                      label="Maksimum Stok Seviyesi"
+                      rules={[{ required: true, message: "Lütfen maksimum stok seviyesini giriniz" }]}
+                  >
+                    <InputNumber style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="lastInventoryDate" label="Son Envanter Sayım Tarihi">
+                    <DatePicker style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Diğer Bilgiler */}
+              <SectionTitle title="Diğer Bilgiler" />
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="isActive" label="Aktif Mi" valuePropName="checked">
+                    <Switch />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="qualityStatus" label="Kalite Durumu">
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="storageConditions" label="Depolama Koşulları">
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Kaydet Butonu */}
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={isUpdating}>
+                  Güncelle
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        </Spin>
+      </div>
   );
 };
 
 export default MaterialUpdateById;
+
+// Alt bileşenler
+const SectionTitle = ({ title }: { title: string }) => (
+    <Col xs={24}>
+      <Typography.Text strong style={{ fontSize: "16px", display: "block", marginBottom: "16px" }}>
+        {title}
+      </Typography.Text>
+    </Col>
+);

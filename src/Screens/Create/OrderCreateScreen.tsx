@@ -189,32 +189,6 @@ const OrderCreateScreen = memo(() => {
             </Col>
 
             <Col xs={24} sm={12} md={8}>
-              <Form.Item name="discountAmount" label="İndirim Tutarı">
-                <InputNumber
-                  style={{ width: "100%" }}
-                  min={0}
-                  formatter={(value) =>
-                    `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
-                  parser={currencyParser}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="taxAmount" label="Vergi Tutarı">
-                <InputNumber
-                  style={{ width: "100%" }}
-                  min={0}
-                  formatter={(value) =>
-                    `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
-                  parser={currencyParser}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
               <Form.Item name="invoiceNumber" label="Fatura Numarası">
                 <Input maxLength={50} />
               </Form.Item>
@@ -237,95 +211,6 @@ const OrderCreateScreen = memo(() => {
               </Form.Item>
             </Col>
 
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item
-                name="orderDate"
-                label="Sipariş Tarihi"
-                rules={[
-                  { required: true, message: "Sipariş tarihi zorunludur" },
-                ]}
-              >
-                <DatePicker style={{ width: "100%" }} showTime />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item
-                name="estimatedDeliveryDate"
-                label="Tahmini Teslimat Tarihi"
-              >
-                <DatePicker style={{ width: "100%" }} showTime />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item
-                name="actualDeliveryDate"
-                label="Gerçek Teslimat Tarihi"
-              >
-                <DatePicker style={{ width: "100%" }} showTime />
-              </Form.Item>
-            </Col>
-
-            {/* Durum ve Ödeme */}
-            <Col xs={24}>
-              <Title level={4}>Durum ve Ödeme Bilgileri</Title>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item
-                name="orderStatus"
-                label="Sipariş Durumu"
-                rules={[
-                  { required: true, message: "Sipariş durumu zorunludur" },
-                ]}
-              >
-                <Select>
-                  {orderStatuses.map((status) => (
-                    <Option key={status} value={status}>
-                      {status}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item
-                name="paymentMethod"
-                label="Ödeme Yöntemi"
-                rules={[
-                  { required: true, message: "Ödeme yöntemi zorunludur" },
-                ]}
-              >
-                <Select>
-                  {paymentMethods.map((method) => (
-                    <Option key={method} value={method}>
-                      {method}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="paymentStatus" label="Ödeme Durumu">
-                <Select>
-                  {paymentStatuses.map((status) => (
-                    <Option key={status} value={status}>
-                      {status}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="isPaid" label="Ödendi" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </Col>
-
             {/* Diğer Bilgiler */}
             <Col xs={24}>
               <Title level={4}>Diğer Bilgiler</Title>
@@ -344,37 +229,13 @@ const OrderCreateScreen = memo(() => {
             </Col>
 
             <Col xs={24} sm={12} md={8}>
-              <Form.Item name="orderSource" label="Sipariş Kaynağı">
-                <Select>
-                  {orderSources.map((source) => (
-                    <Option key={source} value={source}>
-                      {source}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="assignedEmployeeId" label="Atanan Personel ID">
+              <Form.Item name="assignedEmployeeId" label="Atanan Personel">
                 <InputNumber style={{ width: "100%" }} min={0} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item name="isActive" label="Aktif" valuePropName="checked">
-                <Switch />
               </Form.Item>
             </Col>
 
             <Col xs={24}>
               <Form.Item name="specialInstructions" label="Özel Talimatlar">
-                <TextArea rows={4} maxLength={500} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24}>
-              <Form.Item name="cancellationReason" label="İptal Nedeni">
                 <TextArea rows={4} maxLength={500} />
               </Form.Item>
             </Col>

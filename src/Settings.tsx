@@ -70,6 +70,7 @@ export const menus = [
         action: "#",
         subMenu: [
             {id: 2.1, title: "Depolar yönet", action: "/store"},
+            {id: 2.2, title: "İş emirlerini yönet", action: "/work"},
             {id: 2.3, title: "Malzeme üretim durumları", action: "/work-status"},
         ],
     },
@@ -132,7 +133,15 @@ export const searchs = [
 
 export const navMenus = [
     {
-        id: 2,
+        id: 1,
         title: "Genel Bakış",
     },
+    {
+        id: 2,
+        title: "Sipariş Durumları"
+    },
+    {
+        id: 3,
+        title: "Yarı Mamül Durumları"
+    }
 ];

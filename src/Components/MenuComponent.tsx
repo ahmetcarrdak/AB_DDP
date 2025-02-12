@@ -132,9 +132,9 @@ const MenuComponent = memo(() => {
                         <span className="menu-widget-badge">Depo</span>
                     </Link>
 
-                    <Link to={"/work"} className="menu-widget">
+                    <Link to={"/order"} className="menu-widget">
                         <FaNetworkWired className="menu-widget-icon"/>
-                        <span className="menu-widget-badge">İş Yönetim</span>
+                        <span className="menu-widget-badge">Siparişler</span>
                     </Link>
 
                     <Link to={"/person"} className="menu-widget">

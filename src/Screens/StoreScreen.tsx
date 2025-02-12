@@ -154,7 +154,7 @@ const StoreScreen = memo(() => {
             <Link to={"/work-create"} className="table-action-button">
               <BsDatabaseFillAdd />
               <span style={{ paddingLeft: 10 }}>
-                Yeni malzeme talebi oluştur
+               Yarı mamül iş emri oluştur
               </span>
             </Link>
           </div>

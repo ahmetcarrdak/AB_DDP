@@ -12,10 +12,15 @@ import {
 import {Link, useLocation} from "react-router-dom"; // useLocation eklendi
 import {searchs, navMenus} from "../Settings";
 
-const HeaderComponent = memo(() => {
+interface HeaderComponentProps {
+    onMenuClick?: (id: number) => void; // Hamburger menüsü tıklama işlevi, id parametresi alacak
+  }
+  
+  const HeaderComponent: React.FC<HeaderComponentProps> = ({ onMenuClick = () => {} }) => {
+  
     const [searchTerm, setSearchTerm] = useState("");
     const [isFocused, setIsFocused] = useState(false);
-    const [activeMenuId, setActiveMenuId] = useState<number>(2);
+    const [activeMenuId, setActiveMenuId] = useState<number>(1);
     const [activeDotsModal, setActiveDotsModal] = useState(false);
     const location = useLocation(); // Mevcut yolu kontrol etmek için useLocation
 
@@ -132,7 +137,10 @@ const HeaderComponent = memo(() => {
                             <div
                                 className={`header-footer-item ${activeMenuId === menu.id ? "active" : ""}`}
                                 key={menu.id}
-                                onClick={() => handleMenuClick(menu.id)}
+                                onClick={() => { 
+                                    handleMenuClick(menu.id); 
+                                    onMenuClick(menu.id); 
+                                  }}
                             >
                                 <span>{menu.title}</span>
                             </div>
@@ -142,6 +150,6 @@ const HeaderComponent = memo(() => {
             </div>
         </div>
     );
-});
+};
 
 export default HeaderComponent;

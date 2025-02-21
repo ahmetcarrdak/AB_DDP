@@ -1,117 +1,202 @@
-import React, {memo} from 'react'
-import HeaderComponent from "../Components/HeaderComponent";
-
+import React, { useEffect, useState } from "react";
+import { Card } from "antd";
+import axios from "axios";
 import {
-    LineChart,
-    Line,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from "recharts";
+import HeaderComponent from "../Components/HeaderComponent";
+import { apiUrl } from "../Settings";
+import OrderStatus from "./Status/OrderStatus";
+import WorkStatus from "./Status/WorkStatus";
 
-const HomeScreen = memo(() => {
-    const threatPreventionData = [{name: "High", value: 55}, {name: "Medium", value: 2}, {name: "Low", value: 30}];
-    const threatDetectionData = [
-        {name: "Device 1", High: 400, Medium: 240, Low: 240},
-        {name: "Device 2", High: 300, Medium: 139, Low: 221},
-        {name: "Device 3", High: 200, Medium: 980, Low: 229},
-        {name: "Device 4", High: 278, Medium: 390, Low: 200},
-        {name: "Device 5", High: 189, Medium: 480, Low: 218},
-    ];
-    const COLORS = ["#FF0000", "#FFA500", "#00FF00"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
 
-    return (
-        <>
-            <HeaderComponent/>
-            <div className="home-body">
-                <div className="row">
-                    <div className="card">
-                        <h3>Siparişleriniz</h3>
-                        <div className="chart-body">
-                            <div className="cart-body-left">
-                                <ResponsiveContainer width="100%" height={200}>
-                                    <PieChart>
-                                        <Pie data={threatPreventionData} dataKey="value" nameKey="name" cx="50%"
-                                             cy="50%"
-                                             innerRadius={50} outerRadius={80}>
-                                            {threatPreventionData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
-                                            ))}
-                                        </Pie>
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="cart-body-right">
-                                <div className="chart-body-right-item">
-                                    <div
-                                        style={{width: 10, height: 10, borderRadius: 5, background: COLORS[0]}}
-                                    ></div>
-                                    <span style={{padding: "0 5px 0 5px"}}>Bekleyen:</span>
-                                    {threatPreventionData[0].value}
-                                </div>
-                                <div className="chart-body-right-item">
-                                    <div
-                                        style={{width: 10, height: 10, borderRadius: 5, background: COLORS[1]}}
-                                    ></div>
-                                    <span style={{padding: "0 5px 0 5px"}}>Devam eden:</span>
-                                    {threatPreventionData[1].value}
-                                </div>
-                                <div className="chart-body-right-item">
-                                    <div
-                                        style={{width: 10, height: 10, borderRadius: 5, background: COLORS[2]}}
-                                    ></div>
-                                    <span style={{padding: "0 5px 0 5px"}}>Biten:</span>
-                                    {threatPreventionData[2].value}
-                                </div>
-                            </div>
-                        </div>
+const HomeScreen: React.FC = () => {
+  const [machineFailures, setMachineFailures] = useState<
+    { name: string; count: number }[]
+  >([]);
+  const [recentFailures, setRecentFailures] = useState<string[]>([]);
+  const [orderData, setOrderData] = useState<
+    { name: string; count: number }[]
+  >([]);
+  const [workstationJobs, setWorkstationJobs] = useState<
+    { name: string; jobs: number }[]
+  >([]);
 
-                    </div>
+  const [menuOpen, setMenuOpen] = useState(true);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-                    <div className="card large">
-                        <h3>Makine arıza geçmişi</h3>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <LineChart data={threatDetectionData}>
-                                <XAxis dataKey="name"/>
-                                <YAxis/>
-                                <Tooltip/>
-                                <Line type="monotone" dataKey="High" stroke="#FF0000"/>
-                                <Line type="monotone" dataKey="Medium" stroke="#FFA500"/>
-                                <Line type="monotone" dataKey="Low" stroke="#00FF00"/>
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+  const handleMenuClick = (id: number) => {
+    setSelectedId(id);
+  };
 
-                <div className="row">
-                    <div className="card large">
-                        <h3>Threat Detection</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={threatDetectionData}>
-                                <XAxis dataKey="name"/>
-                                <YAxis/>
-                                <Tooltip/>
-                                <Bar dataKey="High" stackId="a" fill="#FF0000"/>
-                                <Bar dataKey="Medium" stackId="a" fill="#FFA500"/>
-                                <Bar dataKey="Low" stackId="a" fill="#00FF00"/>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+  useEffect(() => {
+    axios
+      .get(apiUrl.machineFault5)
+      .then((response) => {
+        const transformedData = response.data.map((machine: any) => ({
+          name: machine.name,
+          count: machine.totalFault,
+        }));
+        setMachineFailures(transformedData);
+      })
+      .catch((error) => {
+        console.error("API'den veri alınırken hata oluştu:", error);
+      });
 
-                    <div className="card">
-                        <h3>Most Attacked Devices</h3>
-                        <div className="large-number">2852</div>
-                        <p>SmartThermostat_2372</p>
-                    </div>
-                </div>
-            </div>
-        </>
-    )
-})
+    axios
+      .get(apiUrl.machineLatestFault)
+      .then((response) => {
+        const failures = response.data.map(
+          (machine: any) =>
+            `${machine.name} - ${new Date(machine.createdAt).toLocaleString()}`
+        );
+        setRecentFailures(failures);
+      })
+      .catch((error) => {
+        console.error("Son arızalar alınırken hata oluştu:", error);
+      });
+
+    axios
+      .get("http://localhost:5262/api/Order/statuses")
+      .then((response) => {
+        const transformedOrderData = response.data.map((order: any) => ({
+          name: order.statusName,
+          count: order.count,
+        }));
+        setOrderData(transformedOrderData);
+      })
+      .catch((error) => {
+        console.error("Sipariş durumları alınırken hata oluştu:", error);
+      });
+
+    // İş istasyonlarındaki bekleyen işlerin verisini alalım
+    axios
+      .get("http://localhost:5262/api/station/top-pending-stations")  // API'nizin endpointi
+      .then((response) => {
+        const transformedWorkstationJobs = response.data.map((station: any) => ({
+          name: station.stationName,
+          jobs: station.totalPendingItems,  // Bekleyen toplam iş sayısı
+        }));
+        setWorkstationJobs(transformedWorkstationJobs);
+      })
+      .catch((error) => {
+        console.error("İş İstasyonlarındaki İşler alınırken hata oluştu:", error);
+      });
+  }, []);
+
+  const tooltipFormatter = (value: any) => [`${value}`, "Arıza Sayısı"];
+  const orderTooltipFormatter = (value: any) => [`${value}`, "Sipariş Sayısı"];
+
+  return (
+    <>
+      <HeaderComponent onMenuClick={handleMenuClick} />
+      {selectedId === 1 || selectedId === null ? (
+        <div
+          style={{
+            padding: 20,
+            display: "grid",
+            gridGap: 20,
+            gridTemplateRows: "auto auto",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "3fr 1fr",
+              gridGap: 20,
+            }}
+          >
+            <Card title="En Çok Arıza Yapan Makineler">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={machineFailures}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip formatter={tooltipFormatter} />
+                  <Legend />
+                  <Bar dataKey="count" fill="#FF5733" barSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+
+            <Card title="Sipariş Durumları">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={orderData}
+                    dataKey="count"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                  >
+                    {orderData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={orderTooltipFormatter} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "3fr 1fr",
+              gridGap: 20,
+            }}
+          >
+            <Card title="İş İstasyonlarındaki İş Sayıları">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={workstationJobs}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [`${value}`, "İş Sayısı"]} />
+                  <Legend />
+                  <Bar dataKey="jobs" fill="#82ca9d" barSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+
+            <Card title="Son Arıza Yapan Makineler">
+              <ul>
+                {recentFailures.map((failure, index) => (
+                  <li key={index}>{failure}</li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+        </div>
+      ) : selectedId === 2 ? (
+        <OrderStatus />
+      ) : selectedId === 3 ? (
+        <WorkStatus />
+      ) : (
+        <div>No valid ID selected</div>
+      )}
+    </>
+  );
+};
+
 export default HomeScreen;

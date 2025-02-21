@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useState, useRef } from "react";
 import axios from "axios";
 import HeaderComponent from "../Components/HeaderComponent";
 import { jsPDF } from "jspdf";
@@ -7,10 +7,13 @@ import {
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
 } from "react-icons/md";
-import { Spin } from "antd";
+import { Spin, Modal, Button } from "antd";
 import { apiUrl } from "../Settings";
 import WorkDetail from "../Components/TableDetailComponent/WorkDetail";
+import Barcode from "react-barcode";
+import html2canvas from "html2canvas"; // html2canvas kütüphanesini içe aktar
 
+// Pagination ve sıralama yardımcı fonksiyonları
 const paginateData = (
   data: any[],
   currentPage: number,
@@ -42,10 +45,14 @@ const WorkScreen = memo(() => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [query, setQuery] = useState("");
-  const [sortColumn, setSortColumn] = useState("");
+  const [sortColumn, setSortColumn] = useState<string>("");
   const [sortAscending, setSortAscending] = useState(true);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBarcodeModalVisible, setBarcodeModalVisible] = useState(false);
+  const [selectedBarcode, setSelectedBarcode] = useState("");
+
+  const barcodeRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,9 +60,9 @@ const WorkScreen = memo(() => {
       try {
         const response = await axios.get(apiUrl.work);
         setData(response.data);
-        setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Veri alma hatası:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -63,14 +70,39 @@ const WorkScreen = memo(() => {
     fetchData();
   }, []);
 
+  const handleBarcodeClick = (barcode: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedBarcode(barcode);
+    setBarcodeModalVisible(true);
+  };
+
+  const handleBarcodeDownload = async () => {
+    if (barcodeRef.current) {
+      try {
+        const canvas = await html2canvas(barcodeRef.current);
+        const url = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `barcode-${selectedBarcode}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error("Barkod indirme hatası:", error);
+      }
+    } else {
+      console.error("Barkod referansı bulunamadı");
+    }
+  };
+
   const columns = [
     { title: "İş Adı", data: "workName" },
     { title: "Durum", data: "status" },
+    { title: "Çalışan Personel", data: "assignedEmployeeId" },
+    { title: "Gerekli Ekipman", data: "requiredEquipment" },
+    { title: "Gerekli Malzeme", data: "requiredMaterials" },
+    { title: "Barkod", data: "barcode" },
     { title: "Öncelik", data: "priority" },
-    { title: "Başlama Tarihi", data: "startDate" },
-    { title: "Bitiş Tarihi", data: "dueDate" },
-    { title: "Departman", data: "assignedDepartmentId" },
-    { title: "Tip", data: "workType" },
     { title: "Aktif", data: "isActive" },
   ];
 
@@ -166,11 +198,24 @@ const WorkScreen = memo(() => {
                       <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                       {columns.map((col) => (
                         <td key={col.data} className={"table-tbody-td"}>
-                          {col.data === "isActive"
-                            ? work[col.data]
-                              ? "Aktif"
-                              : "Pasif"
-                            : work[col.data]}
+                          {col.data === "barcode" ? (
+                            <a
+                              onClick={(e) =>
+                                handleBarcodeClick(work[col.data], e)
+                              }
+                              style={{ color: "#1890ff", cursor: "pointer" }}
+                            >
+                              {work[col.data]}
+                            </a>
+                          ) : col.data === "isActive" ? (
+                            work[col.data] ? (
+                              "Aktif"
+                            ) : (
+                              "Pasif"
+                            )
+                          ) : (
+                            work[col.data]
+                          )}
                         </td>
                       ))}
                       <td>
@@ -227,6 +272,45 @@ const WorkScreen = memo(() => {
           </button>
         </div>
       </div>
+
+      <Modal
+        title="Barkod Görüntüleme"
+        open={isBarcodeModalVisible}
+        onCancel={() => setBarcodeModalVisible(false)}
+        footer={[
+          <Button key="download" type="primary" onClick={handleBarcodeDownload}>
+            Barkodu İndir
+          </Button>,
+          <Button key="close" onClick={() => setBarcodeModalVisible(false)}>
+            Kapat
+          </Button>,
+        ]}
+        centered
+        width={400}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "20px 0",
+          }}
+          ref={barcodeRef}
+        >
+          <Barcode
+            value={selectedBarcode || ""}
+            width={2}
+            height={100}
+            displayValue={true}
+            font="monospace"
+            textAlign="center"
+            textPosition="bottom"
+            textMargin={2}
+            fontSize={20}
+            margin={10}
+            background="#ffffff"
+          />
+        </div>
+      </Modal>
     </div>
   );
 });

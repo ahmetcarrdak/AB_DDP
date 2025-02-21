@@ -116,7 +116,7 @@ const WorkCreateScreen = memo(() => {
             </Row>
 
             {/* ÇalMetaryelan ve Ekipman Bilgileri */}
-            <SectionTitle title="ÇalMetaryelan ve Ekipman Bilgileri" />
+            <SectionTitle title="Metaryel ve Ekipman Bilgileri" />
             <Row gutter={16}>
               <Col xs={24} sm={12} md={8}>
                 <Form.Item name="assignedEmployeeId" label="Çalışacak Personel">

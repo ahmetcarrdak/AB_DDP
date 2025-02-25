@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import DataUpdateComponent from "./DataUpdateComponent";
+import MaintenanceCreateScreen from "./Screens/Create/MaintenanceCreateScreen";
 
 // Lazy load all screens
 const LoginScreen = React.lazy(() => import("./Screens/Auth/LoginScreen"));
@@ -50,6 +51,10 @@ const MachineAddScreen = React.lazy(
 const MachineFaultAddScreen = React.lazy(
   () => import("./Screens/Create/MachineFaultAddScreen")
 );
+
+const MachineCreateScreen = React.lazy(
+  () => import("./Screens/Create/MaintenanceCreateScreen")
+)
 
 // Lazy load Update Screens
 const MaterialUpdateById = React.lazy(
@@ -178,6 +183,7 @@ function App() {
 
             {/* Maintenance Record */}
             <Route path="/maintenance-record" element={<MaintenanceRecord />} />
+            <Route path="/maintenance-record-create" element={<MaintenanceCreateScreen/>}></Route>
 
             {/* Not Found */}
             <Route path="*" element={<Navigate to="/not-found" replace />} />

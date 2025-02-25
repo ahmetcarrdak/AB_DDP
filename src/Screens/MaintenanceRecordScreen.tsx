@@ -129,7 +129,7 @@ const MaintenanceRecordScreen = memo(() => {
           PDF Olarak İndir
         </Button>
         <Link to={"/maintenance-record-create"}>
-          <Button type="primary" onClick={exportPDF} icon={<IoAddOutline />}>
+          <Button type="primary" icon={<IoAddOutline />}>
             Ekle
           </Button>
         </Link>

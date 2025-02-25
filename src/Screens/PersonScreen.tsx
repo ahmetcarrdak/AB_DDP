@@ -13,9 +13,12 @@ import {
   AiOutlineUserAdd,
   AiOutlineUsergroupAdd,
 } from "react-icons/ai";
-import { Spin } from "antd";
+import { Spin, Modal, Tabs, Upload, Button } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { apiUrl } from "../Settings";
 import PersonDetail from "../Components/TableDetailComponent/PersonDetail";
+
+const { TabPane } = Tabs;
 
 const paginateData = (
   data: any[],
@@ -52,6 +55,7 @@ const PersonScreen = memo(() => {
   const [sortAscending, setSortAscending] = useState(true);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isImportModalVisible, setImportModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +112,24 @@ const PersonScreen = memo(() => {
     doc.save("personel.pdf");
   };
 
+  const showImportModal = () => {
+    setImportModalVisible(true);
+  };
+
+  const handleImportModalCancel = () => {
+    setImportModalVisible(false);
+  };
+
+  const downloadSampleExcel = () => {
+    // Örnek Excel dosyasını indirme mantığı buraya yazılabilir
+    console.log("Örnek Excel indiriliyor...");
+  };
+
+  const handleFileUpload = (file: any) => {
+    console.log("Yüklenen dosya:", file);
+    return false; // Antd Upload bileşeni tarafından otomatik yüklemeyi engelliyoruz
+  };
+
   return (
     <div className="screen">
       <div className="screen-header">
@@ -143,7 +165,7 @@ const PersonScreen = memo(() => {
               <AiOutlineUserAdd />
               Personel Ekle
             </Link>
-            <button className="table-action-button">
+            <button className="table-action-button" onClick={showImportModal}>
               <AiOutlineUsergroupAdd />
               Personelleri içe aktar
             </button>
@@ -237,6 +259,35 @@ const PersonScreen = memo(() => {
               <MdOutlineArrowForwardIos />
             </button>
           </div>
+          {/* Modal - Personel Excel Yükleme */}
+          <Modal
+            title="Personelleri İçe Aktar"
+            open={isImportModalVisible}
+            onCancel={handleImportModalCancel}
+            footer={null}
+          >
+            <Tabs defaultActiveKey="1">
+              <TabPane tab="Örnek Exceli Görüntüle" key="1">
+                <p>
+                  Personel verilerinin nasıl yükleneceğine dair örnek Excel
+                  dosyasını aşağıdaki butona tıklayarak indirebilirsiniz.
+                </p>
+                <Button type="primary" onClick={downloadSampleExcel}>
+                  Örnek Exceli İndir
+                </Button>
+              </TabPane>
+              <TabPane tab="Excel Yükle" key="2">
+                <p>Lütfen yüklemek istediğiniz Excel dosyasını seçin.</p>
+                <Upload
+                  beforeUpload={handleFileUpload}
+                  accept=".xlsx, .xls"
+                  showUploadList={true}
+                >
+                  <Button icon={<UploadOutlined />}>Excel Seç</Button>
+                </Upload>
+              </TabPane>
+            </Tabs>
+          </Modal>
         </div>
       </Spin>
     </div>

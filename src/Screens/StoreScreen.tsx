@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { Spin } from "antd";
+import { Spin, Modal, Tabs, Upload, Button } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import {
   MdOutlineArrowBackIosNew,
   MdOutlineArrowForwardIos,
@@ -13,6 +14,8 @@ import { apiUrl } from "../Settings";
 import StoreDetail from "../Components/TableDetailComponent/StoreDetail";
 import { BsDatabaseFill, BsDatabaseFillAdd } from "react-icons/bs";
 import { AiFillFileAdd, AiOutlineFilePdf } from "react-icons/ai";
+
+const { TabPane } = Tabs;
 
 // Veriyi sayfalama işlemi
 const paginateData = (
@@ -52,6 +55,8 @@ const StoreScreen = memo(() => {
   const [sortAscending, setSortAscending] = useState(true);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [loadingTable, setLoadingTable] = useState(true);
+  const [isImportModalVisible, setImportModalVisible] = useState(false);
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,6 +117,24 @@ const StoreScreen = memo(() => {
     doc.save("tablo.pdf");
   };
 
+  const showImportModal = () => {
+    setImportModalVisible(true);
+  };
+
+  const handleImportModalCancel = () => {
+    setImportModalVisible(false);
+  };
+
+  const downloadSampleExcel = () => {
+    // Örnek Excel dosyasını indirme mantığı buraya yazılabilir
+    console.log("Örnek Excel indiriliyor...");
+  };
+
+  const handleFileUpload = (file: any) => {
+    console.log("Yüklenen dosya:", file);
+    return false; // Antd Upload bileşeni tarafından otomatik yüklemeyi engelliyoruz
+  };
+
   return (
     <div className="screen">
       <div className="screen-header">
@@ -149,7 +172,7 @@ const StoreScreen = memo(() => {
             </Link>
             <button className="table-action-button">
               <AiFillFileAdd />
-              <span style={{ paddingLeft: 10 }}> Malzemeleri içe aktar</span>
+              <span style={{ paddingLeft: 10 }}  onClick={showImportModal}> Malzemeleri içe aktar</span>
             </button>
             <Link to={"/work-create"} className="table-action-button">
               <BsDatabaseFillAdd />
@@ -250,6 +273,35 @@ const StoreScreen = memo(() => {
               <MdOutlineArrowForwardIos />
             </button>
           </div>
+          {/* Modal - Stok Excel Yükleme */}
+          <Modal
+            title="Depo Ürünlerini İçe Aktar"
+            open={isImportModalVisible}
+            onCancel={handleImportModalCancel}
+            footer={null}
+          >
+            <Tabs defaultActiveKey="1">
+              <TabPane tab="Örnek Exceli Görüntüle" key="1">
+                <p>
+                  Stok verilerinin nasıl yükleneceğine dair örnek Excel
+                  dosyasını aşağıdaki butona tıklayarak indirebilirsiniz.
+                </p>
+                <Button type="primary" onClick={downloadSampleExcel}>
+                  Örnek Exceli İndir
+                </Button>
+              </TabPane>
+              <TabPane tab="Excel Yükle" key="2">
+                <p>Lütfen yüklemek istediğiniz Excel dosyasını seçin.</p>
+                <Upload
+                  beforeUpload={handleFileUpload}
+                  accept=".xlsx, .xls"
+                  showUploadList={true}
+                >
+                  <Button icon={<UploadOutlined />}>Excel Seç</Button>
+                </Upload>
+              </TabPane>
+            </Tabs>
+          </Modal>
         </div>
       </Spin>
     </div>

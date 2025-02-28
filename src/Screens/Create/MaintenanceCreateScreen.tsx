@@ -50,7 +50,7 @@ const MaintenanceCreateScreen: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px' }}>
-      <h2>Create Maintenance Record</h2>
+      <h2>Bakım Kaydı Ekle</h2>
       <Form onFinish={handleSubmit} layout="vertical">
         <Form.Item
           label="Makine Seçiniz"

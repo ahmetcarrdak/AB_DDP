@@ -16,6 +16,8 @@ export const apiUrl = {
   createPerson: `${domain}Person/create`,
   personById: `${domain}Person`,
   personUpdate: `${domain}Person/update`,
+  personCollectiveUpdate: `${domain}Person/collective-update`,
+  personExelInsert: `${domain}Person/import-from-excel`,
 
   positions: `${domain}Positions`,
 

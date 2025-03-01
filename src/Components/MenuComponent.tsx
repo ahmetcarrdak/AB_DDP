@@ -36,8 +36,12 @@ import {menus} from "../Settings";
 
 import logo from "./../Images/logo.webp";
 
-const MenuComponent = memo(() => {
-    const [isMenu, setMenu] = useState(true);
+interface MenuComponentProps {
+    onMenuClick: () => void;
+    isVisible?: boolean;
+}
+
+const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisible = true }) => {
     const [isMenuBody, setMenuBody] = useState(true);
     const [activeMenu, setActiveMenu] = useState<number | null>(null);
     const [activeSubMenu, setActiveSubMenu] = useState<number | null>(null);
@@ -78,7 +82,7 @@ const MenuComponent = memo(() => {
     };
 
     const handleMenuControl = () => {
-        setMenu(!isMenu);
+        onMenuClick();
     };
 
     const handleMenuBody = () => {
@@ -106,7 +110,7 @@ const MenuComponent = memo(() => {
                     <FiSidebar/>
                 </div>
             </div>
-            <div className="menuBody">
+            <div className={`menuBody ${!isVisible ? 'hidden' : ''}`}>
                 <div className="menuSearchContainer">
                     <CiSearch className="menuSearchIcon"/>
                     <input

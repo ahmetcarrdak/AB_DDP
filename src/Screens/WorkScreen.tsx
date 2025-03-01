@@ -1,77 +1,98 @@
-import React, { memo, useEffect, useState, useRef } from "react";
+import React, { memo, useEffect, useState } from "react";
 import axios from "axios";
 import HeaderComponent from "../Components/HeaderComponent";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
 import {
-  MdOutlineArrowBackIosNew,
-  MdOutlineArrowForwardIos,
-} from "react-icons/md";
-import { Spin, Modal, Button } from "antd";
+  Table,
+  Button,
+  Input,
+  Space,
+  Modal,
+  Card,
+  Tag,
+  Switch,
+  Drawer,
+  Form,
+  message,
+  Spin,
+  Typography,
+  Row,
+  Col,
+  Select,
+  DatePicker
+} from "antd";
+import {
+  DownloadOutlined,
+  PlusOutlined,
+  EditOutlined,
+  EyeOutlined,
+  FilterOutlined,
+  TableOutlined,
+  UnorderedListOutlined,
+  BarcodeOutlined
+} from "@ant-design/icons";
 import { apiUrl } from "../Settings";
 import WorkDetail from "../Components/TableDetailComponent/WorkDetail";
 import Barcode from "react-barcode";
-import html2canvas from "html2canvas"; // html2canvas kütüphanesini içe aktar
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import html2canvas from "html2canvas";
+import type { ColumnsType } from "antd/es/table";
 
-// Pagination ve sıralama yardımcı fonksiyonları
-const paginateData = (
-  data: any[],
-  currentPage: number,
-  itemsPerPage: number
-) => {
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  return data.slice(startIndex, startIndex + itemsPerPage);
-};
+const { Title } = Typography;
+const { Option } = Select;
 
-const sortData = (data: any[], column: string, ascending: boolean) => {
-  return data.sort((a, b) => {
-    if (a[column] < b[column]) return ascending ? -1 : 1;
-    if (a[column] > b[column]) return ascending ? 1 : -1;
-    return 0;
-  });
-};
+interface WorkRecord {
+  workId: number;
+  workName: string;
+  status: string;
+  assignedEmployeeId: string;
+  requiredEquipment: string;
+  requiredMaterials: string;
+  barcode: string;
+  priority: string;
+  isActive: boolean;
+}
 
-const filterData = (data: any[], query: string) => {
-  if (!query) return data;
-  return data.filter((row) => {
-    return Object.values(row).some((value) =>
-      String(value).toLowerCase().includes(query.toLowerCase())
-    );
-  });
-};
+interface Filters {
+  status: string;
+  priority: string;
+  isActive: boolean | null;
+  assignedEmployee: string;
+}
 
 const WorkScreen = memo(() => {
-  const [data, setData] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [query, setQuery] = useState("");
-  const [sortColumn, setSortColumn] = useState<string>("");
-  const [sortAscending, setSortAscending] = useState(true);
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [data, setData] = useState<WorkRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isBarcodeModalVisible, setBarcodeModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
+  const [filters, setFilters] = useState<Filters>({
+    status: "",
+    priority: "",
+    isActive: null,
+    assignedEmployee: ""
+  });
+  const [barcodeModalVisible, setBarcodeModalVisible] = useState(false);
   const [selectedBarcode, setSelectedBarcode] = useState("");
-
-  const barcodeRef = useRef<HTMLDivElement | null>(null);
+  const barcodeRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(apiUrl.work);
-        setData(response.data);
-      } catch (error) {
-        console.error("Veri alma hatası:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
 
-  const handleBarcodeClick = (barcode: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(apiUrl.work);
+      setData(response.data);
+    } catch (error) {
+      message.error("Veri yüklenirken bir hata oluştu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBarcodeClick = (barcode: string) => {
     setSelectedBarcode(barcode);
     setBarcodeModalVisible(true);
   };
@@ -87,195 +108,205 @@ const WorkScreen = memo(() => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        message.success("Barkod başarıyla indirildi");
       } catch (error) {
-        console.error("Barkod indirme hatası:", error);
+        message.error("Barkod indirilirken bir hata oluştu");
       }
-    } else {
-      console.error("Barkod referansı bulunamadı");
     }
   };
 
-  const columns = [
-    { title: "İş Adı", data: "workName" },
-    { title: "Durum", data: "status" },
-    { title: "Çalışan Personel", data: "assignedEmployeeId" },
-    { title: "Gerekli Ekipman", data: "requiredEquipment" },
-    { title: "Gerekli Malzeme", data: "requiredMaterials" },
-    { title: "Barkod", data: "barcode" },
-    { title: "Öncelik", data: "priority" },
-    { title: "Aktif", data: "isActive" },
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = columns.map((col) => col.title);
+    const tableRows = filteredData.map((row) => [
+      row.workName,
+      row.status,
+      row.assignedEmployeeId,
+      row.requiredEquipment,
+      row.requiredMaterials,
+      row.barcode,
+      row.priority,
+      row.isActive ? "Aktif" : "Pasif"
+    ]);
+    
+    //@ts-ignore
+    doc.autoTable(tableColumn, tableRows);
+    doc.save("isler.pdf");
+    message.success("PDF başarıyla indirildi");
+  };
+
+  const columns: ColumnsType<WorkRecord> = [
+    {
+      title: "İş Adı",
+      dataIndex: "workName",
+      key: "workName",
+      sorter: (a, b) => a.workName.localeCompare(b.workName),
+      width: "15%"
+    },
+    {
+      title: "Durum",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={status === "Tamamlandı" ? "green" : status === "Devam Ediyor" ? "blue" : "orange"}>
+          {status}
+        </Tag>
+      ),
+      filters: Array.from(new Set(data.map(item => item.status))).map(status => ({
+        text: status,
+        value: status
+      })),
+      onFilter: (value, record) => record.status === value,
+      width: "10%"
+    },
+    {
+      title: "Öncelik",
+      dataIndex: "priority",
+      key: "priority",
+      render: (priority) => (
+        <Tag color={priority === "Yüksek" ? "red" : priority === "Orta" ? "yellow" : "green"}>
+          {priority}
+        </Tag>
+      ),
+      width: "10%"
+    },
+    {
+      title: "Çalışan Personel",
+      dataIndex: "assignedEmployeeId",
+      key: "assignedEmployeeId",
+      width: "15%"
+    },
+    {
+      title: "Barkod",
+      dataIndex: "barcode",
+      key: "barcode",
+      render: (barcode) => (
+        <Button 
+          type="link" 
+          icon={<BarcodeOutlined />}
+          onClick={() => handleBarcodeClick(barcode)}
+        >
+          {barcode}
+        </Button>
+      ),
+      width: "15%"
+    },
+    {
+      title: "Durum",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (isActive) => (
+        <Switch 
+          checked={isActive} 
+          checkedChildren="Aktif" 
+          unCheckedChildren="Pasif"
+          disabled
+        />
+      ),
+      width: "10%"
+    },
+    {
+      title: "İşlemler",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button 
+            type="link" 
+            icon={<EyeOutlined />}
+            onClick={() => message.info("Detay görüntüleme")}
+          >
+            Detay
+          </Button>
+          <Button 
+            type="link" 
+            icon={<EditOutlined />}
+            href={`work-update-work/${record.workId}`}
+          >
+            Düzenle
+          </Button>
+        </Space>
+      ),
+      width: "15%"
+    }
   ];
 
-  const filteredData = filterData(data, query);
-  const sortedData = sortColumn
-    ? sortData(filteredData, sortColumn, sortAscending)
-    : filteredData;
-  const paginatedData = paginateData(sortedData, currentPage, itemsPerPage);
+  const filteredData = data.filter(record => {
+    const matchesSearch = Object.values(record).some(value =>
+      String(value).toLowerCase().includes(searchText.toLowerCase())
+    );
 
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortAscending(!sortAscending);
-    } else {
-      setSortColumn(column);
-      setSortAscending(true);
-    }
-  };
+    const matchesStatus = !filters.status || record.status === filters.status;
+    const matchesPriority = !filters.priority || record.priority === filters.priority;
+    const matchesActive = filters.isActive === null || record.isActive === filters.isActive;
+    const matchesEmployee = !filters.assignedEmployee || record.assignedEmployeeId === filters.assignedEmployee;
 
-  const toggleRow = (workId: number) => {
-    setExpandedRow(expandedRow === workId ? null : workId);
-  };
+    return matchesSearch && matchesStatus && matchesPriority && matchesActive && matchesEmployee;
+  });
 
   return (
-    <div className="screen">
-      <div className="screen-header">
-        <HeaderComponent />
-      </div>
-      <div className="screen-body">
-        <input
-          type="text"
-          placeholder="Arama..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className={"table-seach-input"}
-        />
-        <div className={"table-head"}>
-          <label htmlFor="itemsPerPage"></label>
-          <select
-            id="itemsPerPage"
-            value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(Number(e.target.value))}
-            className={"table-count-row"}
-          >
-            <option value={10}>10</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-            <option value={200}>200</option>
-          </select>
-          <button
-            onClick={() => {
-              const doc = new jsPDF();
-              const tableColumn = columns.map((col) => col.title);
-              const tableRows = paginatedData.map((row) =>
-                columns.map((col) => row[col.data])
-              );
-              //@ts-ignore
-              doc.autoTable(tableColumn, tableRows);
-              doc.save("isler.pdf");
+    <div>
+      <HeaderComponent />
+      
+      <Card>
+        <Row gutter={[16, 16]} justify="space-between" align="middle">
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Title level={4}>İş Kayıtları</Title>
+          </Col>
+          
+          <Col xs={24} sm={12} md={16} lg={18}>
+            <Space wrap>
+              <Input.Search
+                placeholder="Arama..."
+                allowClear
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 200 }}
+              />
+              
+              <Button 
+                icon={<FilterOutlined />}
+                onClick={() => setFilterDrawerVisible(true)}
+              >
+                Filtreler
+              </Button>
+
+              <Button 
+                icon={<DownloadOutlined />}
+                onClick={handleExportPDF}
+              >
+                PDF İndir
+              </Button>
+
+              <Button 
+                type="primary"
+                icon={<PlusOutlined />}
+                href="/work-create"
+              >
+                Yeni İş Ekle
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+
+        <Spin spinning={loading}>
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="workId"
+            expandable={{
+              expandedRowRender: (record) => <WorkDetail id={record.workId} />,
             }}
-            className={"table-action-button"}
-          >
-            PDF Olarak İndir
-          </button>
-        </div>
-
-        <Spin spinning={loading} tip="Loading...">
-          <table className="table">
-            <thead className={"table-thead"}>
-              <tr>
-                <th>#</th>
-                {columns.map((column) => (
-                  <th
-                    key={column.data}
-                    onClick={() => handleSort(column.data)}
-                    className={"table-thead-th"}
-                  >
-                    {column.title}{" "}
-                    {sortColumn === column.data && (sortAscending ? "↑" : "↓")}
-                  </th>
-                ))}
-                <th>#</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {paginatedData.length > 0 &&
-                paginatedData.map((work, index) => (
-                  <React.Fragment key={work.workId}>
-                    <tr
-                      onClick={() => toggleRow(work.workId)}
-                      className={"table-tbody"}
-                    >
-                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                      {columns.map((col) => (
-                        <td key={col.data} className={"table-tbody-td"}>
-                          {col.data === "barcode" ? (
-                            <a
-                              onClick={(e) =>
-                                handleBarcodeClick(work[col.data], e)
-                              }
-                              style={{ color: "#1890ff", cursor: "pointer" }}
-                            >
-                              {work[col.data]}
-                            </a>
-                          ) : col.data === "isActive" ? (
-                            work[col.data] ? (
-                              "Aktif"
-                            ) : (
-                              "Pasif"
-                            )
-                          ) : (
-                            work[col.data]
-                          )}
-                        </td>
-                      ))}
-                      <td>
-                        <a
-                          href={`work-update-work/${work.workId}`}
-                          className="edit-row-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          Düzenle
-                        </a>
-                      </td>
-                    </tr>
-
-                    {expandedRow === work.workId && (
-                      <tr>
-                        <td colSpan={columns.length + 1}>
-                          <div className="table-detail-container">
-                            <WorkDetail id={work.workId} />
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-            </tbody>
-          </table>
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} kayıt`,
+              pageSizeOptions: ["10", "20", "50", "100"]
+            }}
+          />
         </Spin>
-        <div
-          className="pagination"
-          style={{
-            marginTop: "10px",
-            display: "flex",
-            justifyContent: "flex-start",
-          }}
-        >
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={"table-pagination-button"}
-          >
-            <MdOutlineArrowBackIosNew />
-          </button>
-          <span style={{ margin: "0 10px" }}>
-            {currentPage} / {Math.ceil(filteredData.length / itemsPerPage)}
-          </span>
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage * itemsPerPage >= filteredData.length}
-            className={"table-pagination-button"}
-          >
-            <MdOutlineArrowForwardIos />
-          </button>
-        </div>
-      </div>
+      </Card>
 
       <Modal
         title="Barkod Görüntüleme"
-        open={isBarcodeModalVisible}
+        open={barcodeModalVisible}
         onCancel={() => setBarcodeModalVisible(false)}
         footer={[
           <Button key="download" type="primary" onClick={handleBarcodeDownload}>
@@ -283,21 +314,21 @@ const WorkScreen = memo(() => {
           </Button>,
           <Button key="close" onClick={() => setBarcodeModalVisible(false)}>
             Kapat
-          </Button>,
+          </Button>
         ]}
         centered
         width={400}
       >
         <div
+          ref={barcodeRef}
           style={{
             display: "flex",
             justifyContent: "center",
-            padding: "20px 0",
+            padding: "20px 0"
           }}
-          ref={barcodeRef}
         >
           <Barcode
-            value={selectedBarcode || ""}
+            value={selectedBarcode}
             width={2}
             height={100}
             displayValue={true}
@@ -311,6 +342,63 @@ const WorkScreen = memo(() => {
           />
         </div>
       </Modal>
+
+      <Drawer
+        title="Filtreler"
+        placement="right"
+        onClose={() => setFilterDrawerVisible(false)}
+        open={filterDrawerVisible}
+        width={320}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Durum">
+            <Select
+              allowClear
+              placeholder="Durum seçin"
+              onChange={(value) => setFilters({...filters, status: value})}
+            >
+              {Array.from(new Set(data.map(item => item.status))).map(status => (
+                <Option key={status} value={status}>{status}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Öncelik">
+            <Select
+              allowClear
+              placeholder="Öncelik seçin"
+              onChange={(value) => setFilters({...filters, priority: value})}
+            >
+              {Array.from(new Set(data.map(item => item.priority))).map(priority => (
+                <Option key={priority} value={priority}>{priority}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Aktiflik Durumu">
+            <Select
+              allowClear
+              placeholder="Aktiflik durumu seçin"
+              onChange={(value) => setFilters({...filters, isActive: value})}
+            >
+              <Option value={true}>Aktif</Option>
+              <Option value={false}>Pasif</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Çalışan">
+            <Select
+              allowClear
+              placeholder="Çalışan seçin"
+              onChange={(value) => setFilters({...filters, assignedEmployee: value})}
+            >
+              {Array.from(new Set(data.map(item => item.assignedEmployeeId))).map(employee => (
+                <Option key={employee} value={employee}>{employee}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Drawer>
     </div>
   );
 });

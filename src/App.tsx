@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import DataUpdateComponent from "./DataUpdateComponent";
@@ -101,18 +101,38 @@ function App() {
   const hideMenuRoutes = ["/login", "/register", "/not-found"];
   const showMenu = !hideMenuRoutes.includes(location.pathname);
 
+  const [isMenuVisible, setIsMenuVisible] = useState(window.innerWidth > 768);
+  const [activeTab, setActiveTab] = useState<number>(1);
+
+  const handleToggleMenu = () => {
+    setIsMenuVisible(!isMenuVisible);
+  };
+
+  const handleTabChange = (tabId: number) => {
+    setActiveTab(tabId);
+  };
+
   return (
     <div className="App">
       <Suspense fallback={<LoadingSpinner />}>
-        {showMenu && (
+        {showMenu && isMenuVisible && (
           <div className="menu">
-            <MenuComponent />
+            <MenuComponent 
+              onMenuClick={handleToggleMenu} 
+              isVisible={isMenuVisible} 
+            />
           </div>
         )}
-        <div className="body">
+        <div className={`body ${!isMenuVisible ? 'full-width' : ''}`}>
           <Routes>
             {/* Home */}
-            <Route path="/" element={<HomeScreen />} />
+            <Route path="/" element={
+              <HomeScreen 
+                onToggleMenu={handleToggleMenu}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+              />
+            } />
 
             {/* Company Settings */}
             <Route
@@ -125,7 +145,9 @@ function App() {
             <Route path="/register" element={<RegisterScreen />} />
 
             {/* Store */}
-            <Route path="/store" element={<StoreScreen />} />
+            <Route path="/store" element={
+              <StoreScreen onToggleMenu={handleToggleMenu} />
+            } />
             <Route path="/material-add" element={<MaterialAddScreen />} />
             <Route
               path="/store-update-material/:id"
@@ -134,7 +156,9 @@ function App() {
             <Route path="/material-update" element={<MaterialUpdate />} />
 
             {/* Person */}
-            <Route path="/person" element={<PersonScreen />} />
+            <Route path="/person" element={
+              <PersonScreen onToggleMenu={handleToggleMenu} />
+            } />
             <Route path="/person-create" element={<PersonCreate />} />
             <Route
               path="/person-update-user/:id"
@@ -143,7 +167,9 @@ function App() {
             <Route path="/person-update" element={<PersonUpdate />} />
 
             {/* Order */}
-            <Route path="/order" element={<OrderScreen />} />
+            <Route path="/order" element={
+              <OrderScreen onToggleMenu={handleToggleMenu} />
+            } />
             <Route path="/order-create" element={<OrderCreateScreen />} />
             <Route path="/order-status" element={<OrderStatus />} />
             <Route

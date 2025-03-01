@@ -7,16 +7,25 @@ import {
     IoChatbubblesOutline,
     IoMailOutline,
     IoSettings,
-    IoWarningOutline
+    IoWarningOutline,
+    IoSearchOutline,
+    IoTimeOutline
 } from "react-icons/io5";
 import {Link, useLocation} from "react-router-dom"; // useLocation eklendi
 import {searchs, navMenus} from "../Settings";
+import { RiArrowRightLine } from "react-icons/ri";
 
 interface HeaderComponentProps {
     onMenuClick?: (id: number) => void; // Hamburger menüsü tıklama işlevi, id parametresi alacak
-  }
-  
-  const HeaderComponent: React.FC<HeaderComponentProps> = ({ onMenuClick = () => {} }) => {
+    onToggleMenu?: () => void; // Yeni prop eklendi
+    activeTab?: number;
+}
+
+const HeaderComponent: React.FC<HeaderComponentProps> = ({ 
+    onMenuClick = () => {}, 
+    onToggleMenu = () => {},
+    activeTab = 1
+}) => {
   
     const [searchTerm, setSearchTerm] = useState("");
     const [isFocused, setIsFocused] = useState(false);
@@ -26,6 +35,7 @@ interface HeaderComponentProps {
 
     const handleMenuClick = (menuId: number) => {
         setActiveMenuId(menuId);
+        onMenuClick(menuId);
     };
 
     const filteredSearches = searchs.filter((search) =>
@@ -57,7 +67,10 @@ interface HeaderComponentProps {
             </div>
             <div className="header-body">
                 <div className="header-body-left">
-                    <MdWidgets/>
+                    <MdWidgets 
+                        style={{ cursor: 'pointer' }}
+                        onClick={onToggleMenu}
+                    />
                     <span className={"header-body-title"}>
                         x-Firması-Kontrol-Paneli
                     </span>
@@ -103,24 +116,35 @@ interface HeaderComponentProps {
                     {isFocused && (
                         <div className="header-search-container">
                             {filteredSearches.length > 0 ? (
-                                filteredSearches.map((search) => (
-                                    <Link to={search.action} key={search.id}>
-                                        <div className="header-search-container-item">
-                                            <div className="menu-search-container-item-icon-container">
-                                                {search.icon}
-                                            </div>
-                                            <div className="header-search-container-item-desc-container">
-                                                <div className="header-search-title">{search.title}</div>
-                                                <div className="header-search-description">
-                                                    {search.description}
+                                <>
+                                    <div className="header-search-section">
+                                        {filteredSearches.map((search) => (
+                                            <Link to={search.action} key={search.id}>
+                                                <div className="header-search-container-item">
+                                                    <div className="menu-search-container-item-icon-container">
+                                                        {search.icon}
+                                                    </div>
+                                                    <div className="header-search-container-item-desc-container">
+                                                        <div className="header-search-title">
+                                                            {search.title}
+                                                            <RiArrowRightLine style={{ marginLeft: 4, fontSize: 14 }} />
+                                                        </div>
+                                                        <div className="header-search-description">
+                                                            {search.description}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </>
                             ) : (
                                 <div className="header-search-no-results">
-                                    Arama sonucu bulunamadı.
+                                    <IoSearchOutline style={{ fontSize: 24, marginBottom: 8 }} />
+                                    <div>"{searchTerm}" için sonuç bulunamadı</div>
+                                    <small style={{ display: 'block', marginTop: 4 }}>
+                                        Farklı anahtar kelimeler deneyebilir veya menüden seçim yapabilirsiniz
+                                    </small>
                                 </div>
                             )}
                         </div>
@@ -135,12 +159,9 @@ interface HeaderComponentProps {
                         </div>
                         {navMenus.map((menu) => (
                             <div
-                                className={`header-footer-item ${activeMenuId === menu.id ? "active" : ""}`}
+                                className={`header-footer-item ${activeTab === menu.id ? "active" : ""}`}
                                 key={menu.id}
-                                onClick={() => { 
-                                    handleMenuClick(menu.id); 
-                                    onMenuClick(menu.id); 
-                                  }}
+                                onClick={() => handleMenuClick(menu.id)}
                             >
                                 <span>{menu.title}</span>
                             </div>

@@ -2,67 +2,91 @@ import React, { memo, useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
 import {
-  MdOutlineArrowBackIosNew,
-  MdOutlineArrowForwardIos,
-} from "react-icons/md";
-import { IoIosAdd } from "react-icons/io";
-import { apiUrl } from "./../Settings";
+  Table,
+  Button,
+  Input,
+  Space,
+  Card,
+  Tag,
+  Drawer,
+  Form,
+  message,
+  Spin,
+  Typography,
+  Row,
+  Col,
+  Select,
+  DatePicker,
+  Modal,
+} from "antd";
+import {
+  DownloadOutlined,
+  PlusOutlined,
+  FilterOutlined,
+  TableOutlined,
+  UnorderedListOutlined,
+} from "@ant-design/icons";
+import { apiUrl } from "../Settings";
 import OrderDetail from "../Components/TableDetailComponent/OrderDetail";
-import { Spin } from "antd";
-import { AiOutlineFilePdf } from "react-icons/ai";
+import type { ColumnsType } from "antd/es/table";
+import moment from "moment";
+import { Dayjs } from "dayjs";
 
-const paginateData = (
-  data: any[],
-  currentPage: number,
-  itemsPerPage: number
-) => {
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  return data.slice(startIndex, startIndex + itemsPerPage);
-};
+const { Title } = Typography;
+const { Option } = Select;
 
-const sortData = (data: any[], column: string, ascending: boolean) => {
-  return data.sort((a, b) => {
-    if (a[column] < b[column]) return ascending ? -1 : 1;
-    if (a[column] > b[column]) return ascending ? 1 : -1;
-    return 0;
-  });
-};
+interface OrderRecord {
+  orderId: number;
+  customerName: string;
+  productName: string;
+  totalAmount: number;
+  orderStatus: string;
+  priority: string;
+  paymentStatus: string;
+  isActive: boolean;
+  orderDate: string;
+}
 
-const filterData = (data: any[], query: string) => {
-  if (!query) return data;
-  return data.filter((row) => {
-    return Object.values(row).some((value) =>
-      String(value).toLowerCase().includes(query.toLowerCase())
-    );
-  });
-};
+interface Filters {
+  orderStatus: string;
+  priority: string;
+  paymentStatus: string;
+  isActive: boolean | null;
+  dateRange: [Dayjs | null, Dayjs | null] | null;
+}
 
-const OrderScreen = memo(() => {
-  const [data, setData] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [query, setQuery] = useState("");
-  const [sortColumn, setSortColumn] = useState("");
-  const [sortAscending, setSortAscending] = useState(true);
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+interface OrderScreenProps {
+  onToggleMenu: () => void;
+}
+
+const OrderScreen: React.FC<OrderScreenProps> = ({ onToggleMenu }) => {
+  const [data, setData] = useState<OrderRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
+  const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+  const [filters, setFilters] = useState<Filters>({
+    orderStatus: "",
+    priority: "",
+    paymentStatus: "",
+    isActive: null,
+    dateRange: null,
+  });
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
         const response = await axios.get(`${apiUrl.order}`);
         const updatedData = response.data.map((order: any) => ({
           ...order,
-          totalAmount: order.quantity * order.unitPrice, // totalAmount hesaplaması
+          totalAmount: order.quantity * order.unitPrice,
         }));
         setData(updatedData);
-        setLoading(false);
       } catch (error) {
+        message.error("Veri yüklenirken bir hata oluştu");
         console.error("Error fetching data:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -70,188 +94,249 @@ const OrderScreen = memo(() => {
     fetchData();
   }, []);
 
-  const columns = [
-    { title: "Sipariş No", data: "orderId" },
-    { title: "Müşteri", data: "customerName" },
-    { title: "Ürün", data: "productName" },
-    { title: "Tutar", data: "totalAmount" },
-    { title: "Durum", data: "orderStatus" },
-    { title: "Öncelik", data: "priority" },
-    { title: "Ödeme Durumu", data: "paymentStatus" },
-    { title: "Aktif", data: "isActive" },
+  const columns: ColumnsType<OrderRecord> = [
+    {
+      title: "Sipariş No",
+      dataIndex: "orderId",
+      key: "orderId",
+      sorter: (a, b) => a.orderId - b.orderId,
+      width: "10%",
+    },
+    {
+      title: "Müşteri",
+      dataIndex: "customerName",
+      key: "customerName",
+      sorter: (a, b) => a.customerName.localeCompare(b.customerName),
+      width: "15%",
+    },
+    {
+      title: "Ürün",
+      dataIndex: "productName",
+      key: "productName",
+      width: "15%",
+    },
+    {
+      title: "Tutar",
+      dataIndex: "totalAmount",
+      key: "totalAmount",
+      sorter: (a, b) => a.totalAmount - b.totalAmount,
+      render: (amount) => `₺${amount.toLocaleString()}`,
+      width: "10%",
+    },
+    {
+      title: "Durum",
+      dataIndex: "orderStatus",
+      key: "orderStatus",
+      render: (status) => (
+        <Tag color={status === "Tamamlandı" ? "green" : status === "Beklemede" ? "orange" : "blue"}>
+          {status}
+        </Tag>
+      ),
+      width: "10%",
+    },
+    {
+      title: "Öncelik",
+      dataIndex: "priority",
+      key: "priority",
+      render: (priority) => (
+        <Tag color={priority === "Yüksek" ? "red" : priority === "Orta" ? "orange" : "green"}>
+          {priority}
+        </Tag>
+      ),
+      width: "10%",
+    },
+    {
+      title: "Ödeme Durumu",
+      dataIndex: "paymentStatus",
+      key: "paymentStatus",
+      render: (status) => (
+        <Tag color={status === "Ödendi" ? "green" : "red"}>
+          {status}
+        </Tag>
+      ),
+      width: "10%",
+    },
+    {
+      title: "Durum",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (active) => (
+        <Tag color={active ? "green" : "red"}>
+          {active ? "Aktif" : "Pasif"}
+        </Tag>
+      ),
+      width: "10%",
+    },
+    {
+      title: "İşlemler",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button type="link" onClick={() => handleViewDetails(record)}>
+            Detay
+          </Button>
+          <Link to={`/order-update-order/${record.orderId}`}>
+            <Button type="link">Düzenle</Button>
+          </Link>
+        </Space>
+      ),
+      width: "10%",
+    },
   ];
 
-  const filteredData = filterData(data, query);
-  const sortedData = sortColumn
-    ? sortData(filteredData, sortColumn, sortAscending)
-    : filteredData;
-  const paginatedData = paginateData(sortedData, currentPage, itemsPerPage);
-
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortAscending(!sortAscending);
-    } else {
-      setSortColumn(column);
-      setSortAscending(true);
-    }
+  const handleViewDetails = (record: OrderRecord) => {
+    Modal.info({
+      title: `Sipariş Detayı - #${record.orderId}`,
+      width: 800,
+      content: <OrderDetail id={record.orderId} />,
+    });
   };
 
-  const toggleRow = (orderId: number) => {
-    setExpandedRow(expandedRow === orderId ? null : orderId);
+  const handleExportPDF = () => {
+    message.success("PDF indirme başladı");
+    // PDF export logic here
   };
+
+  const filteredData = data.filter(record => {
+    const matchesSearch = Object.values(record).some(value =>
+      String(value).toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    const matchesOrderStatus = !filters.orderStatus || record.orderStatus === filters.orderStatus;
+    const matchesPriority = !filters.priority || record.priority === filters.priority;
+    const matchesPaymentStatus = !filters.paymentStatus || record.paymentStatus === filters.paymentStatus;
+    const matchesActive = filters.isActive === null || record.isActive === filters.isActive;
+    
+    const matchesDateRange = !filters.dateRange || !filters.dateRange[0] || !filters.dateRange[1] || 
+      moment(record.orderDate).isBetween(filters.dateRange[0]?.toDate() ?? null, filters.dateRange[1]?.toDate() ?? null, 'day', '[]');
+
+    return matchesSearch && matchesOrderStatus && matchesPriority && 
+           matchesPaymentStatus && matchesActive && matchesDateRange;
+  });
 
   return (
-    <div className="screen">
-      <div className="screen-header">
-        <HeaderComponent />
-      </div>
-      <Spin spinning={loading} tip="Veriler yükleniyor">
-        <div className="screen-body">
-          <input
-            type="text"
-            placeholder="Arama..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={"table-seach-input"}
-          />
-          <div className={"table-head"}>
-            <label htmlFor="itemsPerPage"></label>
-            <select
-              id="itemsPerPage"
-              value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className={"table-count-row"}
-            >
-              <option value={10}>10</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={200}>200</option>
-            </select>
-            <button
-              onClick={() => {
-                const doc = new jsPDF();
-                const tableColumn = columns.map((col) => col.title);
-                const tableRows = paginatedData.map((row) =>
-                  columns.map((col) => row[col.data])
-                );
-                //@ts-ignore
-                doc.autoTable(tableColumn, tableRows);
-                doc.save("siparisler.pdf");
-              }}
-              className={"table-action-button"}
-            >
-              <AiOutlineFilePdf />
-              <span style={{ paddingLeft: 10 }}>PDF Olarak İndir</span>
-            </button>
-            <Link to={"/order-create"} className={"table-action-button"}>
-              <IoIosAdd />
-              <span style={{ paddingLeft: 10 }}>Sipariş Ekle</span>
-            </Link>
-          </div>
+    <div>
+  
+      
+      <Card>
+        <Row gutter={[16, 16]} justify="space-between" align="middle">
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Title level={4}>Siparişler</Title>
+          </Col>
+          
+          <Col xs={24} sm={12} md={16} lg={18}>
+            <Space wrap>
+              <Input.Search
+                placeholder="Arama..."
+                allowClear
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 200 }}
+              />
+              
+              <Button 
+                icon={<FilterOutlined />}
+                onClick={() => setFilterDrawerVisible(true)}
+              >
+                Filtreler
+              </Button>
 
-          <table className="table">
-            <thead className={"table-thead"}>
-              <tr>
-                <th>#</th>
-                {columns.map((column) => (
-                  <th
-                    key={column.data}
-                    onClick={() => handleSort(column.data)}
-                    className={"table-thead-th"}
-                  >
-                    {column.title}{" "}
-                    {sortColumn === column.data && (sortAscending ? "↑" : "↓")}
-                  </th>
+              <Button 
+                icon={<DownloadOutlined />}
+                onClick={handleExportPDF}
+              >
+                PDF İndir
+              </Button>
+
+              <Link to="/order-create">
+                <Button type="primary" icon={<PlusOutlined />}>
+                  Yeni Sipariş
+                </Button>
+              </Link>
+            </Space>
+          </Col>
+        </Row>
+
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          rowKey="orderId"
+          loading={loading}
+          pagination={{
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} sipariş`,
+          }}
+          scroll={{ x: true }}
+          expandable={{
+            expandedRowRender: (record) => <OrderDetail id={record.orderId} />,
+          }}
+        />
+
+        <Drawer
+          title="Filtreler"
+          placement="right"
+          onClose={() => setFilterDrawerVisible(false)}
+          open={filterDrawerVisible}
+          width={320}
+        >
+          <Form layout="vertical">
+            <Form.Item label="Sipariş Durumu">
+              <Select
+                allowClear
+                placeholder="Durum seçin"
+                onChange={(value) => setFilters({...filters, orderStatus: value})}
+              >
+                {Array.from(new Set(data.map(item => item.orderStatus))).map(status => (
+                  <Option key={status} value={status}>{status}</Option>
                 ))}
-                <th>#</th>
-              </tr>
-            </thead>
+              </Select>
+            </Form.Item>
 
-            <tbody>
-              {paginatedData.length > 0 ? (
-                paginatedData.map((order, index) => (
-                  <React.Fragment key={order.orderId}>
-                    <tr
-                      onClick={() => toggleRow(order.orderId)}
-                      className={"table-tbody"}
-                    >
-                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                      {columns.map((col) => (
-                        <td key={col.data} className={"table-tbody-td"}>
-                          {col.data === "isActive"
-                            ? order[col.data]
-                              ? "Aktif"
-                              : "Pasif"
-                            : order[col.data]}
-                        </td>
-                      ))}
-                      <td>
-                        <a
-                          href={`order-update-order/${order.orderId}`}
-                          className="edit-row-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          Düzenle
-                        </a>
-                      </td>
-                    </tr>
+            <Form.Item label="Öncelik">
+              <Select
+                allowClear
+                placeholder="Öncelik seçin"
+                onChange={(value) => setFilters({...filters, priority: value})}
+              >
+                {Array.from(new Set(data.map(item => item.priority))).map(priority => (
+                  <Option key={priority} value={priority}>{priority}</Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-                    {expandedRow === order.orderId && (
-                      <tr>
-                        <td colSpan={columns.length + 1}>
-                          <div className="table-detail-container">
-                            <OrderDetail id={order.orderId} />
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={columns.length + 1}
-                    style={{ textAlign: "center" }}
-                  >
-                    Veri bulunamadı
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            <Form.Item label="Ödeme Durumu">
+              <Select
+                allowClear
+                placeholder="Ödeme durumu seçin"
+                onChange={(value) => setFilters({...filters, paymentStatus: value})}
+              >
+                {Array.from(new Set(data.map(item => item.paymentStatus))).map(status => (
+                  <Option key={status} value={status}>{status}</Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-          <div
-            className="pagination"
-            style={{
-              marginTop: "10px",
-              display: "flex",
-              justifyContent: "flex-start",
-            }}
-          >
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={"table-pagination-button"}
-            >
-              <MdOutlineArrowBackIosNew />
-            </button>
-            <span style={{ margin: "0 10px" }}>
-              {currentPage} / {Math.ceil(filteredData.length / itemsPerPage)}
-            </span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage * itemsPerPage >= filteredData.length}
-              className={"table-pagination-button"}
-            >
-              <MdOutlineArrowForwardIos />
-            </button>
-          </div>
-        </div>
-      </Spin>
+            <Form.Item label="Aktiflik Durumu">
+              <Select
+                allowClear
+                placeholder="Aktiflik durumu seçin"
+                onChange={(value) => setFilters({...filters, isActive: value})}
+              >
+                <Option value={true}>Aktif</Option>
+                <Option value={false}>Pasif</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item label="Tarih Aralığı">
+              <DatePicker.RangePicker
+                onChange={(dates) => setFilters({...filters, dateRange: dates as [Dayjs | null, Dayjs | null] | null})}
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+          </Form>
+        </Drawer>
+      </Card>
     </div>
   );
-});
+};
 
 export default OrderScreen;

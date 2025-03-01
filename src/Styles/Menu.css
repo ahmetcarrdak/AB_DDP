@@ -77,21 +77,21 @@
 
 /* Scrollbar stili */
 .menu-items::-webkit-scrollbar {
-    width: 4px; /* Scrollbar genişliği */
+    width: 4px;
 }
 
 .menu-items::-webkit-scrollbar-thumb {
-    background-color: #ccc; /* Scrollbar kaydırma çubuğu rengi */
-    border-radius: 4px; /* Scrollbar köşe yuvarlama */
+    background-color: #ccc;
+    border-radius: 4px;
 }
 
 .menu-items::-webkit-scrollbar-thumb:hover {
-    background-color: #888; /* Hover durumunda kaydırma çubuğu rengi */
+    background-color: #888;
 }
 
 .menu-items::-webkit-scrollbar-track {
-    background-color: #f1f1f1; /* Scrollbar arka plan rengi */
-    border-radius: 4px; /* Arka plan köşe yuvarlama */
+    background-color: #f1f1f1;
+    border-radius: 4px;
 }
 
 .menu-items.active {
@@ -113,7 +113,6 @@
     color: var(--menu-text-color);
     border-left: 1px solid #ddd;
     transition: .3s;
-
 }
 
 .menu-item-icon {
@@ -155,7 +154,6 @@
 .menu-item-container.active > a > .menu-item > .menu-item-icon:nth-child(2) {
     transform: rotate(90deg);
 }
-
 
 .menu-footer-icons {
     display: flex;
@@ -317,4 +315,57 @@
 
 .logoutContainer-logout {
     background: #e36767;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    .menu {
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+    }
+
+    .menu-items.active {
+        height: calc(100vh - 200px);
+    }
+
+    .menu-widgets {
+        flex-direction: column;
+    }
+
+    .menu-widget {
+        width: 90%;
+        margin: 5px 0;
+    }
+
+    .menu-footer {
+        position: fixed;
+        bottom: 0;
+        background: var(--menu-background);
+        padding: 10px 0;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .menuSearchContainer {
+        width: 95%;
+    }
+
+    .menu-profile {
+        width: 95%;
+    }
+
+    .menu-profile-left-label {
+        font-size: 12px;
+    }
+
+    .logoutContainer-card {
+        width: 95%;
+    }
+
+    .menu-footer-icons {
+        padding: 0 10px;
+    }
 }

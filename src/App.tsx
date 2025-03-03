@@ -1,14 +1,13 @@
 import React, { Suspense, useState } from "react";
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import "react-toastify/dist/ReactToastify.css";
 import DataUpdateComponent from "./DataUpdateComponent";
 import MaintenanceCreateScreen from "./Screens/Create/MaintenanceCreateScreen";
 
 // Lazy load all screens
-const LoginScreen = React.lazy(() => import("./Screens/Auth/LoginScreen"));
-const RegisterScreen = React.lazy(
-  () => import("./Screens/Auth/RegisterScreen")
-);
 const HomeScreen = React.lazy(() => import("./Screens/HomeScreen"));
 const NotFoundScreen = React.lazy(() => import("./Screens/NotFoundScreen"));
 const StoreScreen = React.lazy(() => import("./Screens/StoreScreen"));
@@ -16,67 +15,69 @@ const PersonScreen = React.lazy(() => import("./Screens/PersonScreen"));
 const OrderScreen = React.lazy(() => import("./Screens/OrderScreen"));
 const WorkScreen = React.lazy(() => import("./Screens/WorkScreen"));
 const CompanySettingsScreen = React.lazy(
-  () => import("./Screens/CompanySettingsScreen")
+    () => import("./Screens/CompanySettingsScreen")
 );
 const QualityControlScreen = React.lazy(
-  () => import("./Screens/QualityControlScreen")
+    () => import("./Screens/QualityControlScreen")
 );
 const MachineScreen = React.lazy(() => import("./Screens/MachineScreen"));
 const MachineFaultScreen = React.lazy(
-  () => import("./Screens/MachineFaultScreen")
+    () => import("./Screens/MachineFaultScreen")
 );
 const MaintenanceRecord = React.lazy(
-  () => import("./Screens/MaintenanceRecordScreen")
+    () => import("./Screens/MaintenanceRecordScreen")
 );
+
+const AuthScreen = React.lazy(() => import("./Screens/AuthScreen"));
 
 // Lazy load Create Screens
 const MaterialAddScreen = React.lazy(
-  () => import("./Screens/Create/MaterialAddScreen")
+    () => import("./Screens/Create/MaterialAddScreen")
 );
 const WorkCreateScreen = React.lazy(
-  () => import("./Screens/Create/WorkCreateScreen")
+    () => import("./Screens/Create/WorkCreateScreen")
 );
 const OrderCreateScreen = React.lazy(
-  () => import("./Screens/Create/OrderCreateScreen")
+    () => import("./Screens/Create/OrderCreateScreen")
 );
 const PersonCreate = React.lazy(
-  () => import("./Screens/Create/PersonCreateScreen")
+    () => import("./Screens/Create/PersonCreateScreen")
 );
 const QualityControlAddScreen = React.lazy(
-  () => import("./Screens/Create/QualityControlAddScreen")
+    () => import("./Screens/Create/QualityControlAddScreen")
 );
 const MachineAddScreen = React.lazy(
-  () => import("./Screens/Create/MachineAddScreen")
+    () => import("./Screens/Create/MachineAddScreen")
 );
 const MachineFaultAddScreen = React.lazy(
-  () => import("./Screens/Create/MachineFaultAddScreen")
+    () => import("./Screens/Create/MachineFaultAddScreen")
 );
 
 const MachineCreateScreen = React.lazy(
-  () => import("./Screens/Create/MaintenanceCreateScreen")
+    () => import("./Screens/Create/MaintenanceCreateScreen")
 )
 
 // Lazy load Update Screens
 const MaterialUpdateById = React.lazy(
-  () => import("./Screens/Update/MaterialUpdateById")
+    () => import("./Screens/Update/MaterialUpdateById")
 );
 const MaterialUpdate = React.lazy(
-  () => import("./Screens/Update/MaterialUpdate")
+    () => import("./Screens/Update/MaterialUpdate")
 );
 const WorkUpdateById = React.lazy(
-  () => import("./Screens/Update/WorkUpdateById")
+    () => import("./Screens/Update/WorkUpdateById")
 );
 const WorkUpdate = React.lazy(() => import("./Screens/Update/WorkUpdate"));
 const OrderUpdateById = React.lazy(
-  () => import("./Screens/Update/OrderUpdateById")
+    () => import("./Screens/Update/OrderUpdateById")
 );
 const OrderUpdate = React.lazy(() => import("./Screens/Update/OrderUpdate"));
 const PersonUpdateById = React.lazy(
-  () => import("./Screens/Update/PersonUpdateById")
+    () => import("./Screens/Update/PersonUpdateById")
 );
 const PersonUpdate = React.lazy(() => import("./Screens/Update/PersonUpdate"));
 const MachineUpdateById = React.lazy(
-  () => import("./Screens/Update/MachineUpdateById")
+    () => import("./Screens/Update/MachineUpdateById")
 );
 
 // Lazy load Status Screens
@@ -88,18 +89,19 @@ const MenuComponent = React.lazy(() => import("./Components/MenuComponent"));
 
 // Loading Component
 const LoadingSpinner = () => (
-  <div className="loading_container">
-    <span></span>
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
+    <div className="loading_container">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
 );
 
-function App() {
+function AppContent() {
   const location = useLocation();
-  const hideMenuRoutes = ["/login", "/register", "/not-found"];
+  const hideMenuRoutes = ["/auth", "/login", "/register", "/not-found"];
   const showMenu = !hideMenuRoutes.includes(location.pathname);
+  const { isAuthenticated } = useAuth(); // Auth context'inden oturum durumunu al
 
   const [isMenuVisible, setIsMenuVisible] = useState(window.innerWidth > 768);
   const [activeTab, setActiveTab] = useState<number>(1);
@@ -113,112 +115,283 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Suspense fallback={<LoadingSpinner />}>
-        {showMenu && isMenuVisible && (
-          <div className="menu">
-            <MenuComponent 
-              onMenuClick={handleToggleMenu} 
-              isVisible={isMenuVisible} 
-            />
-          </div>
-        )}
-        <div className={`body ${!isMenuVisible ? 'full-width' : ''}`}>
-          <Routes>
-            {/* Home */}
-            <Route path="/" element={
-              <HomeScreen 
-                onToggleMenu={handleToggleMenu}
-                activeTab={activeTab}
-                onTabChange={handleTabChange}
+      <div className="App">
+        <Suspense fallback={<LoadingSpinner />}>
+          {showMenu && isMenuVisible && isAuthenticated && (
+              <div className="menu">
+                <MenuComponent
+                    onMenuClick={handleToggleMenu}
+                    isVisible={isMenuVisible}
+                />
+              </div>
+          )}
+          <div className={`body ${!isMenuVisible || !isAuthenticated ? 'full-width' : ''}`}>
+            <Routes>
+              {/* Auth Routes - Oturum gerektirmeyen rotalar */}
+              <Route path="/auth" element={<AuthScreen />} />
+              <Route path="/not-found" element={<NotFoundScreen />} />
+
+              {/* Protected Routes - Oturum gerektiren rotalar */}
+              <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <HomeScreen
+                          onToggleMenu={handleToggleMenu}
+                          activeTab={activeTab}
+                          onTabChange={handleTabChange}
+                      />
+                    </ProtectedRoute>
+                  }
               />
-            } />
 
-            {/* Company Settings */}
-            <Route
-              path="/company-settings"
-              element={<CompanySettingsScreen />}
-            />
+              {/* Store */}
+              <Route
+                  path="/store"
+                  element={
+                    <ProtectedRoute>
+                      <StoreScreen onToggleMenu={handleToggleMenu} />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/material-add"
+                  element={
+                    <ProtectedRoute>
+                      <MaterialAddScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/store-update-material/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MaterialUpdateById />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/material-update"
+                  element={
+                    <ProtectedRoute>
+                      <MaterialUpdate />
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Authentication */}
-            <Route path="/login" element={<LoginScreen />} />
-            <Route path="/register" element={<RegisterScreen />} />
+              {/* Person */}
+              <Route
+                  path="/person"
+                  element={
+                    <ProtectedRoute>
+                      <PersonScreen onToggleMenu={handleToggleMenu} />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/person-create"
+                  element={
+                    <ProtectedRoute>
+                      <PersonCreate />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/person-update-user/:id"
+                  element={
+                    <ProtectedRoute>
+                      <PersonUpdateById />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/person-update"
+                  element={
+                    <ProtectedRoute>
+                      <PersonUpdate />
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Store */}
-            <Route path="/store" element={
-              <StoreScreen onToggleMenu={handleToggleMenu} />
-            } />
-            <Route path="/material-add" element={<MaterialAddScreen />} />
-            <Route
-              path="/store-update-material/:id"
-              element={<MaterialUpdateById />}
-            />
-            <Route path="/material-update" element={<MaterialUpdate />} />
+              {/* Order */}
+              <Route
+                  path="/order"
+                  element={
+                    <ProtectedRoute>
+                      <OrderScreen onToggleMenu={handleToggleMenu} />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/order-create"
+                  element={
+                    <ProtectedRoute>
+                      <OrderCreateScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/order-status"
+                  element={
+                    <ProtectedRoute>
+                      <OrderStatus />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/order-update-order/:id"
+                  element={
+                    <ProtectedRoute>
+                      <OrderUpdateById />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/order-update"
+                  element={
+                    <ProtectedRoute>
+                      <OrderUpdate />
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Person */}
-            <Route path="/person" element={
-              <PersonScreen onToggleMenu={handleToggleMenu} />
-            } />
-            <Route path="/person-create" element={<PersonCreate />} />
-            <Route
-              path="/person-update-user/:id"
-              element={<PersonUpdateById />}
-            />
-            <Route path="/person-update" element={<PersonUpdate />} />
+              {/* Work */}
+              <Route
+                  path="/work"
+                  element={
+                    <ProtectedRoute>
+                      <WorkScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/work-create"
+                  element={
+                    <ProtectedRoute>
+                      <WorkCreateScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/work-status"
+                  element={
+                    <ProtectedRoute>
+                      <WorkStatus />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/work-update-work/:id"
+                  element={
+                    <ProtectedRoute>
+                      <WorkUpdateById />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/work-update"
+                  element={
+                    <ProtectedRoute>
+                      <WorkUpdate />
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Order */}
-            <Route path="/order" element={
-              <OrderScreen onToggleMenu={handleToggleMenu} />
-            } />
-            <Route path="/order-create" element={<OrderCreateScreen />} />
-            <Route path="/order-status" element={<OrderStatus />} />
-            <Route
-              path="/order-update-order/:id"
-              element={<OrderUpdateById />}
-            />
-            <Route path="/order-update" element={<OrderUpdate />} />
+              {/* Quality Control */}
+              <Route
+                  path="/quality-control"
+                  element={
+                    <ProtectedRoute>
+                      <QualityControlScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/quality-control-create"
+                  element={
+                    <ProtectedRoute>
+                      <QualityControlAddScreen />
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Work */}
-            <Route path="/work" element={<WorkScreen />} />
-            <Route path="/work-create" element={<WorkCreateScreen />} />
-            <Route path="/work-status" element={<WorkStatus />} />
-            <Route path="/work-update-work/:id" element={<WorkUpdateById />} />
-            <Route path="/work-update" element={<WorkUpdate />} />
+              {/* Machine */}
+              <Route
+                  path="/machine"
+                  element={
+                    <ProtectedRoute>
+                      <MachineScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/machine-create"
+                  element={
+                    <ProtectedRoute>
+                      <MachineAddScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/machine-update-machine/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MachineUpdateById />
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Quality Control */}
-            <Route path="/quality-control" element={<QualityControlScreen />} />
-            <Route
-              path="/quality-control-create"
-              element={<QualityControlAddScreen />}
-            />
+              {/* Machine Fault */}
+              <Route
+                  path="/machine-fault"
+                  element={
+                    <ProtectedRoute>
+                      <MachineFaultScreen />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/machine-fault-create"
+                  element={
+                    <ProtectedRoute>
+                      <MachineFaultAddScreen />
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Machine */}
-            <Route path="/machine" element={<MachineScreen />} />
-            <Route path="/machine-create" element={<MachineAddScreen />} />
-            <Route
-              path="/machine-update-machine/:id"
-              element={<MachineUpdateById />}
-            />
+              {/* Maintenance Record */}
+              <Route
+                  path="/maintenance-record"
+                  element={
+                    <ProtectedRoute>
+                      <MaintenanceRecord />
+                    </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/maintenance-record-create"
+                  element={
+                    <ProtectedRoute>
+                      <MaintenanceCreateScreen/>
+                    </ProtectedRoute>
+                  }
+              />
 
-            {/* Machine Fault */}
-            <Route path="/machine-fault" element={<MachineFaultScreen />} />
-            <Route
-              path="/machine-fault-create"
-              element={<MachineFaultAddScreen />}
-            />
+              {/* Redirect to auth if not found */}
+              <Route path="*" element={<Navigate to="/auth" replace />} />
+            </Routes>
+          </div>
+          <DataUpdateComponent />
+        </Suspense>
+      </div>
+  );
+}
 
-            {/* Maintenance Record */}
-            <Route path="/maintenance-record" element={<MaintenanceRecord />} />
-            <Route path="/maintenance-record-create" element={<MaintenanceCreateScreen/>}></Route>
-
-            {/* Not Found */}
-            <Route path="*" element={<Navigate to="/not-found" replace />} />
-            <Route path="/not-found" element={<NotFoundScreen />} />
-          </Routes>
-        </div>
-        <DataUpdateComponent />
-      </Suspense>
-    </div>
+function App() {
+  return (
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
   );
 }
 

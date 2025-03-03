@@ -26,33 +26,35 @@ const AuthScreen: React.FC = () => {
   const onFinish = async (values: AuthFormData) => {
     setLoading(true);
     try {
-      let endpoint;
-      if (isLogin) {
-        endpoint = isCompanyLogin ? 'http://localhost:5262/api/Auth/company/login' : '/api/auth/personnel/login';
-      } else {
-        endpoint = '/api/auth/company/register';
-      }
-      
-      const response = await axios.post(endpoint, values);
-      if (response.data.token) {
-        const userData = {
-          type: isCompanyLogin ? 'company' : 'personnel',
-          ...response.data.user
-        };
-        
-        // Sadece login fonksiyonunu kullan
-        login(response.data.token, userData);
-        setIsAuthenticated(true)
-        
-        toast.success(isLogin ? 'Giriş başarılı!' : 'Kayıt başarılı!');
-      }
+        let endpoint;
+        if (isLogin) {
+            endpoint = isCompanyLogin ? 'http://localhost:5262/api/Auth/company/login' : '/api/auth/personnel/login';
+        } else {
+            endpoint = '/api/auth/company/register';
+        }
+
+        const response = await axios.post(endpoint, values);
+        if (response.data.token) {
+            const userData = {
+                type: isCompanyLogin ? 'company' : 'personnel',
+                ...response.data.user
+            };
+
+            login(response.data.token, userData);
+            
+            toast.success(isLogin ? 'Giriş başarılı!' : 'Kayıt başarılı!');
+            
+            // Kullanıcı giriş yaptıysa dashboard'a yönlendir
+            navigate('/', { replace: true });
+        }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error(isLogin ? 'Giriş bilgileri hatalı!' : 'Kayıt işlemi başarısız!');
+        console.error('Login error:', error);
+        toast.error(isLogin ? 'Giriş bilgileri hatalı!' : 'Kayıt işlemi başarısız!');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
 
   const CompanyLoginForm = () => (
     <Form

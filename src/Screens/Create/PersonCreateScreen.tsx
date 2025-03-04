@@ -22,6 +22,7 @@ import {
     shiftSchedules,
     driverLicenses,
 } from "../../constants"; // Sabitler ayrı bir dosyada
+import apiClient from "../../Utils/ApiClient";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -38,7 +39,7 @@ const PersonCreateScreen = memo(() => {
     useEffect(() => {
         const fetchPositions = async () => {
             try {
-                const response = await axios.get(`${apiUrl.positions}`);
+                const response = await apiClient.get(`${apiUrl.positions}`);
                 setPositions(response.data);
             } catch (error) {
                 console.error("Error fetching positions:", error);
@@ -49,12 +50,13 @@ const PersonCreateScreen = memo(() => {
                 });
             }
         };
+
         fetchPositions();
     }, []);
 
     const onFinish = async (values: any) => {
         try {
-            await axios.post(apiUrl.createPerson, values);
+            await apiClient.post(apiUrl.createPerson, values);
             toast.success("Personel başarıyla oluşturuldu", {
                 position: "bottom-right",
                 autoClose: 3000,
@@ -197,6 +199,29 @@ const PersonalInformationForm = () => (
     </>
 );
 
+const departments = [
+    "Üretim",
+    "Kalite Kontrol",
+    "Ar-Ge",
+    "Mühendislik",
+    "Bakım",
+    "Lojistik",
+    "Depo",
+    "Satın Alma",
+    "Planlama",
+    "İnsan Kaynakları",
+    "Muhasebe",
+    "Finans",
+    "Bilgi Teknolojileri",
+    "Satış",
+    "Pazarlama",
+    "İş Sağlığı ve Güvenliği",
+    "Çevre Yönetimi",
+    "Hukuk",
+    "Güvenlik",
+    "Yönetim",
+];
+
 const CompanyInformationForm = ({ positions }: { positions: Position[] }) => (
     <>
         <Col xs={24} sm={12} md={8}>
@@ -209,8 +234,23 @@ const CompanyInformationForm = ({ positions }: { positions: Position[] }) => (
             </Form.Item>
         </Col>
         <Col xs={24} sm={12} md={8}>
-            <Form.Item name="department" label="Departman">
-                <Input maxLength={50} />
+            <Form.Item
+                name="department"
+                label="Departman"
+                rules={[{ required: true, message: "Lütfen departman seçiniz" }]}
+            >
+                <Select
+                    showSearch
+                    placeholder="Departman seçiniz"
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                        (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={departments.map((dept) => ({
+                        value: dept,
+                        label: dept,
+                    }))}
+                />
             </Form.Item>
         </Col>
         <Col xs={24} sm={12} md={8}>

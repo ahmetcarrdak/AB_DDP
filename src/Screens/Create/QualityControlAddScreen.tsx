@@ -14,6 +14,7 @@ import axios from "axios";
 import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -47,16 +48,18 @@ const QualityControlAddScreen = memo(() => {
     try {
       const qualityControlData = {
         ...values,
-        testDate: values.testDate.toISOString(),
+        testDate: values.testDate.toISOString(), // testDate'yi uygun formata çeviriyoruz
       };
 
-      await axios.post(apiUrl.createQualityControl, qualityControlData);
+      // API'ye kalite kontrol verisini gönderiyoruz
+      await apiClient.post(apiUrl.createQualityControl, qualityControlData);
+
       toast.success("Kalite kontrol kaydı başarıyla oluşturuldu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
-      form.resetFields();
+      form.resetFields(); // Formu sıfırlıyoruz
     } catch (error) {
       console.error("Error creating quality control record:", error);
       toast.error("Kalite kontrol kaydı oluşturulurken bir hata oluştu", {

@@ -4,6 +4,7 @@ import { FaInfoCircle } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import { apiUrl } from "./../../Settings";
 import { Spin } from "antd";
+import apiClient from "../../Utils/ApiClient";
 
 interface OrderDetailProps {
   id: number;
@@ -48,17 +49,17 @@ const OrderDetail = memo(({ id }: OrderDetailProps) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${apiUrl.orderById}/${id}`);
-        setOrder(response.data);
-        setLoading(false);
+        const response = await apiClient.get(`${apiUrl.orderById}/${id}`); // apiClient ile veri çekme
+        setOrder(response.data); // Order verilerini set ediyoruz
       } catch (error) {
         console.error("Verileri çekerken bir hata oluştu:", error);
-        setLoading(false);
+      } finally {
+        setLoading(false); // Yükleme tamamlanıyor
       }
     };
-    fetchData();
-  }, [id]);
 
+    fetchData(); // Verileri çekme fonksiyonu çalıştırılıyor
+  }, [id]); // id değiştiğinde fetchData tekrar çalışır
 
 
   return (

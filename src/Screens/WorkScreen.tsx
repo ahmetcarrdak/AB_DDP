@@ -37,6 +37,7 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import html2canvas from "html2canvas";
 import type { ColumnsType } from "antd/es/table";
+import apiClient from "../Utils/ApiClient";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -81,16 +82,24 @@ const WorkScreen = memo(() => {
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
+    setLoading(true);  // Yükleme durumunu true yapıyoruz
     try {
-      const response = await axios.get(apiUrl.work);
-      setData(response.data);
+      // apiClient ile veri çekme
+      const response = await apiClient.get(apiUrl.work);  // axios yerine apiClient kullanıldı
+      setData(response.data);  // Gelen veriyi state'e kaydediyoruz
     } catch (error) {
+      // Hata durumunda kullanıcıya mesaj gösterme
       message.error("Veri yüklenirken bir hata oluştu");
+      console.error("Error fetching data:", error);  // Hata detaylarını konsola yazdırıyoruz
     } finally {
+      // Yükleme durumunu false yapıyoruz
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();  // Veri çekme fonksiyonunu çağırıyoruz
+  }, []);
 
   const handleBarcodeClick = (barcode: string) => {
     setSelectedBarcode(barcode);

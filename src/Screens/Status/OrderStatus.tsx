@@ -2,6 +2,8 @@ import React, { memo, useEffect, useState } from "react";
 import { Table, Card, Typography, Tag } from "antd";
 import axios from "axios";
 import { apiUrl } from "../../Settings";
+import apiClient from "../../Utils/ApiClient";
+import {toast, ToastContainer} from "react-toastify";
 
 const { Title } = Typography;
 
@@ -35,17 +37,23 @@ const OrderStatus = memo(() => {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // İlk verileri çekme işlemi
     useEffect(() => {
         const fetchInitialData = async () => {
+            setIsLoading(true); // Yükleme başladığını belirtiyoruz
+
             try {
+                // API isteklerini paralel olarak yapıyoruz
                 const [stationsResponse, ordersResponse] = await Promise.all([
-                    axios.get<Station[]>(apiUrl.station),
-                    axios.get<Order[]>(apiUrl.stationInfoOrder),
+                    apiClient.get<Station[]>(apiUrl.station),
+                    apiClient.get<Order[]>(apiUrl.stationInfoOrder),
                 ]);
 
+                // İstasyonları sıralıyoruz
                 const stationsData = stationsResponse.data.sort((a, b) => a.orderNumber - b.orderNumber);
                 setStations(stationsData);
 
+                // Siparişleri istasyonlara göre gruplayarak ayarlıyoruz
                 const ordersGroupedByStation: { [key: number]: Order[] } = {};
                 ordersResponse.data.forEach((order) => {
                     if (!ordersGroupedByStation[order.stagesId]) {
@@ -56,9 +64,14 @@ const OrderStatus = memo(() => {
 
                 setOrdersByStation(ordersGroupedByStation);
             } catch (error) {
-                console.error("Error fetching initial data:", error);
+                console.error("Veriler alınırken bir hata oluştu:", error);
+                toast.error("Veriler alınırken bir hata oluştu", {
+                    position: "bottom-right",
+                    autoClose: 3000,
+                    theme: "colored",
+                });
             } finally {
-                setIsLoading(false);
+                setIsLoading(false); // Yükleme tamamlandı
             }
         };
 
@@ -90,6 +103,7 @@ const OrderStatus = memo(() => {
 
     return (
         <div style={{ padding: "20px" }}>
+            <ToastContainer />
             <Title level={2}>İstasyonlar ve Siparişler</Title>
             {isLoading ? (
                 <Card>

@@ -16,6 +16,7 @@ import axios from "axios";
 import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -36,11 +37,11 @@ const WorkCreateScreen = memo(() => {
   useEffect(() => {
     const fetchPersons = async () => {
       try {
-        const personsResponse = await axios.get(`${apiUrl.person}`);
-        setPersons(personsResponse.data);
+        const personsResponse = await apiClient.get(`${apiUrl.person}`);
+        setPersons(personsResponse.data); // Personel verilerini alıyoruz
       } catch (error) {
         console.error("Error fetching persons:", error);
-        toast.error("ÇalMetaryelanlar yüklenirken bir hata oluştu", {
+        toast.error("Çalışanlar yüklenirken bir hata oluştu", {
           position: "bottom-right",
           autoClose: 3000,
           theme: "colored",
@@ -48,20 +49,20 @@ const WorkCreateScreen = memo(() => {
       }
     };
     fetchPersons();
-  }, []);
+  }, []); // Effect sadece component mount edildiğinde çalışır
 
   const onFinish = async (values: any) => {
     try {
-      await axios.post(apiUrl.createWork, values);
-      toast.success("Metaryel başarıyla oluşturuldu", {
+      await apiClient.post(apiUrl.createWork, values); // apiClient ile veri gönderiyoruz
+      toast.success("İş başarıyla oluşturuldu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
-      form.resetFields();
+      form.resetFields(); // Formu sıfırlıyoruz
     } catch (error) {
       console.error("Error creating work:", error);
-      toast.error("Metaryel oluşturulurken bir hata oluştu", {
+      toast.error("İş oluşturulurken bir hata oluştu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",

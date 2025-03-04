@@ -32,6 +32,9 @@ import OrderDetail from "../Components/TableDetailComponent/OrderDetail";
 import type { ColumnsType } from "antd/es/table";
 import moment from "moment";
 import { Dayjs } from "dayjs";
+import apiClient from "../Utils/ApiClient";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -75,23 +78,35 @@ const OrderScreen: React.FC<OrderScreenProps> = ({ onToggleMenu }) => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(`${apiUrl.order}`);
+        const response = await apiClient.get(apiUrl.order);
         const updatedData = response.data.map((order: any) => ({
           ...order,
-          totalAmount: order.quantity * order.unitPrice,
+          totalAmount: order.quantity * order.unitPrice, // Toplam tutar hesaplama
         }));
-        setData(updatedData);
+
+        if (isMounted) setData(updatedData);
       } catch (error) {
-        message.error("Veri yüklenirken bir hata oluştu");
-        console.error("Error fetching data:", error);
+        console.error("Veri çekme hatası:", error);
+        toast.error("Sipariş verileri alınırken hata oluştu!", {
+          position: "bottom-right",
+          autoClose: 3000,
+          theme: "colored",
+        });
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      isMounted = false; // Unmount sırasında state güncellenmesini önle
+    };
   }, []);
 
   const columns: ColumnsType<OrderRecord> = [
@@ -217,7 +232,7 @@ const OrderScreen: React.FC<OrderScreenProps> = ({ onToggleMenu }) => {
   return (
     <div>
   
-      
+      <ToastContainer />
       <Card>
         <Row gutter={[16, 16]} justify="space-between" align="middle">
           <Col xs={24} sm={12} md={8} lg={6}>

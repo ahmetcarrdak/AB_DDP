@@ -15,6 +15,7 @@ import axios from "axios";
 import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -42,18 +43,20 @@ const MachineAddScreen = memo(() => {
         purchaseDate: values.purchaseDate.toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        totalFault: 0, // Initialize with 0 faults
+        totalFault: 0, // Başlangıçta 0 arıza
       };
 
-      await axios.post(apiUrl.machine, machineData);
+      // apiClient ile veri gönderme
+      await apiClient.post(apiUrl.machine, machineData);
       toast.success("Makine başarıyla oluşturuldu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
-      form.resetFields();
+
+      form.resetFields(); // Formu sıfırlıyoruz
     } catch (error) {
-      console.error("Error creating machine:", error);
+      console.error("Makine oluşturulurken hata oluştu:", error);
       toast.error("Makine oluşturulurken bir hata oluştu", {
         position: "bottom-right",
         autoClose: 3000,

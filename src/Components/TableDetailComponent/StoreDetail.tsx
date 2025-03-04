@@ -15,6 +15,7 @@ import { GrInfo } from "react-icons/gr";
 import { IoIosAlbums, IoIosArrowForward, IoIosCheckmark } from "react-icons/io";
 import { LiaTimesSolid } from "react-icons/lia";
 import { apiUrl } from "../../Settings";
+import apiClient from "../../Utils/ApiClient";
 
 interface StoreDetailProps {
   id: number;
@@ -48,8 +49,8 @@ const StoreDetail = memo(({ id }: StoreDetailProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${apiUrl.storeById}/${id}`);
-        setData(response.data);
+        const response = await apiClient.get(`${apiUrl.storeById}/${id}`); // apiClient ile veri çekme
+        setData(response.data); // data set ediliyor
         setRow({
           purchaseDate: response.data.purchaseDate || "",
           expiryDate: response.data.expiryDate || "",
@@ -74,8 +75,8 @@ const StoreDetail = memo(({ id }: StoreDetailProps) => {
         console.error("Verileri çekerken bir hata oluştu:", error);
       }
     };
-    fetchData();
-  }, []);
+    fetchData(); // Verileri çekme işlemi başlatılıyor
+  }, []); // Effect yalnızca ilk renderda çalışacak
 
   // Stok durumu grafiği için renk belirleme
   const StockStatusChart = ({ quantity, upperLimit, lowerLimit }: any) => {

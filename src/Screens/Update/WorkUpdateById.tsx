@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import { useParams } from "react-router-dom";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -69,15 +70,17 @@ const WorkUpdateById = () => {
     "Low", "Medium", "High", "Critical"
   ];
 
+  // İş bilgilerini al
   useEffect(() => {
     const fetchWorkDetails = async () => {
       if (!id) return;
-      
-      setIsLoadingDetails(true);
+
+      setIsLoadingDetails(true); // Yükleme başladığını belirtiyoruz
       try {
-        const response = await axios.get(`${apiUrl.workById}/${id}`);
+        const response = await apiClient.get(`${apiUrl.workById}/${id}`); // apiClient kullanımı
         const data = response.data;
 
+        // Verileri düzenleyerek güncellenmiş veri ile formu güncelliyoruz
         const updatedData = {
           ...data,
           startDate: data.startDate ? dayjs(data.startDate) : null,
@@ -87,25 +90,27 @@ const WorkUpdateById = () => {
         };
 
         setWorkDetails(updatedData);
-        form.setFieldsValue(updatedData);
+        form.setFieldsValue(updatedData); // Form alanlarını güncelliyoruz
       } catch (error) {
-        console.error("Error fetching work details:", error);
+        console.error("İş bilgileri alınırken hata oluştu:", error);
         toast.error("İş bilgileri yüklenirken bir hata oluştu", {
           position: "bottom-right",
           autoClose: 3000,
           theme: "colored",
         });
       } finally {
-        setIsLoadingDetails(false);
+        setIsLoadingDetails(false); // Yükleme işlemi tamamlandı
       }
     };
 
     fetchWorkDetails();
-  }, [id, form]);
+  }, [id, form]); // id veya form değiştiğinde bu effect çalışır
 
+// İş güncelleme fonksiyonu
   const onFinish = async (values: any) => {
-    setIsUpdating(true);
+    setIsUpdating(true); // Güncelleme başladığını belirtiyoruz
     try {
+      // Tarihleri uygun formata dönüştürüp düzenliyoruz
       const formattedValues = {
         ...values,
         startDate: values.startDate ? values.startDate.toISOString() : null,
@@ -114,21 +119,22 @@ const WorkUpdateById = () => {
         cancellationDate: values.cancellationDate ? values.cancellationDate.toISOString() : null,
       };
 
-      await axios.put(`${apiUrl.workUpdate}/${id}`, formattedValues);
+      // İş güncelleme işlemini yapıyoruz
+      await apiClient.put(`${apiUrl.updateWork}/${id}`, formattedValues); // apiClient kullanımı
       toast.success("İş başarıyla güncellendi", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
     } catch (error) {
-      console.error("Error updating work:", error);
+      console.error("İş güncellenirken hata oluştu:", error);
       toast.error("İş güncellenirken bir hata oluştu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(false); // Güncelleme işlemi tamamlandı
     }
   };
 

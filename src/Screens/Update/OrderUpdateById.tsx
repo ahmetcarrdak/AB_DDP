@@ -20,6 +20,7 @@ import {apiUrl} from "../../Settings";
 import {toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {useParams} from "react-router-dom";
+import apiClient from "../../Utils/ApiClient";
 
 const {Title} = Typography;
 const {Option} = Select;
@@ -30,15 +31,17 @@ const OrderUpdateById = () => {
     const [isLoadingOrder, setIsLoadingOrder] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 
+    // Sipariş detaylarını alacak olan useEffect
     useEffect(() => {
         const fetchOrderDetails = async () => {
-            if (!id) return;
+            if (!id) return; // id yoksa işlemi başlatma
 
-            setIsLoadingOrder(true);
+            setIsLoadingOrder(true); // Yükleme başladığını belirtiyoruz
             try {
-                const response = await axios.get(`${apiUrl.orderById}/${id}`);
+                const response = await apiClient.get(`${apiUrl.orderById}/${id}`);  // apiClient kullanımı
                 const data = response.data;
 
+                // Verileri düzenleyerek form alanlarına atıyoruz
                 const updatedData = {
                     ...data,
                     orderDate: data.orderDate ? dayjs(data.orderDate) : null,
@@ -47,25 +50,27 @@ const OrderUpdateById = () => {
                     cancellationDate: data.cancellationDate ? dayjs(data.cancellationDate) : null,
                 };
 
-                form.setFieldsValue(updatedData);
+                form.setFieldsValue(updatedData); // Form alanlarını güncelliyoruz
             } catch (error) {
-                console.error("Error fetching order details:", error);
+                console.error("Sipariş bilgileri alınırken hata oluştu:", error);
                 toast.error("Sipariş bilgileri yüklenirken bir hata oluştu", {
                     position: "bottom-right",
                     autoClose: 3000,
                     theme: "colored",
                 });
             } finally {
-                setIsLoadingOrder(false);
+                setIsLoadingOrder(false); // Yükleme bitiyor
             }
         };
 
         fetchOrderDetails();
-    }, [id, form]);
+    }, [id, form]); // id veya form değiştiğinde bu effect çalışır
 
+// Sipariş güncelleme fonksiyonu
     const onFinish = async (values: any) => {
-        setIsUpdating(true);
+        setIsUpdating(true); // Güncelleme işlemi başladığını belirtiyoruz
         try {
+            // Tarihleri uygun formata dönüştürüp düzenliyoruz
             const formattedValues = {
                 ...values,
                 orderDate: values.orderDate ? values.orderDate.toISOString() : null,
@@ -74,34 +79,36 @@ const OrderUpdateById = () => {
                 cancellationDate: values.cancellationDate ? values.cancellationDate.toISOString() : null,
             };
 
-            await axios.put(`${apiUrl.orderUpdate}/${id}`, formattedValues);
+            // Siparişi güncelliyoruz
+            await apiClient.put(`${apiUrl.updateOrder}/${id}`, formattedValues);  // apiClient kullanımı
             toast.success("Sipariş başarıyla güncellendi", {
                 position: "bottom-right",
                 autoClose: 3000,
                 theme: "colored",
             });
         } catch (error) {
-            console.error("Error updating order:", error);
+            console.error("Sipariş güncellenirken hata oluştu:", error);
             toast.error("Sipariş güncellenirken bir hata oluştu", {
                 position: "bottom-right",
                 autoClose: 3000,
                 theme: "colored",
             });
         } finally {
-            setIsUpdating(false);
+            setIsUpdating(false); // Güncelleme işlemi tamamlanıyor
         }
     };
 
+// Sipariş iptal etme fonksiyonu
     const handleCancelOrder = async () => {
         try {
-            await axios.put(`${apiUrl.orderCancel}/${id}`);
+            await apiClient.put(`${apiUrl.cancelOrder}/${id}`);  // apiClient kullanımı
             toast.success("Sipariş başarıyla iptal edildi", {
                 position: "bottom-right",
                 autoClose: 3000,
                 theme: "colored",
             });
         } catch (error) {
-            console.error("Error cancelling order:", error);
+            console.error("Sipariş iptal edilirken hata oluştu:", error);
             toast.error("Sipariş iptal edilirken bir hata oluştu", {
                 position: "bottom-right",
                 autoClose: 3000,
@@ -110,18 +117,19 @@ const OrderUpdateById = () => {
         }
     };
 
+// Sipariş silme fonksiyonu
     const handleDeleteOrder = async () => {
         try {
-            await axios.delete(`${apiUrl.orderDelete}/${id}`);
+            await apiClient.delete(`${apiUrl.deleteOrder}/${id}`);  // apiClient kullanımı
             toast.success("Sipariş başarıyla silindi", {
                 position: "bottom-right",
                 autoClose: 3000,
                 theme: "colored",
             });
-            // Redirect to orders list or another page after deletion
-            window.location.href = "/orders"; // Adjust the redirect URL as needed
+            // Silme işlemi sonrası sayfayı güncelleyebilirsiniz
+            window.location.href = "/orders"; // Yönlendirme yapılacak sayfayı buraya ayarlayın
         } catch (error) {
-            console.error("Error deleting order:", error);
+            console.error("Sipariş silinirken hata oluştu:", error);
             toast.error("Sipariş silinirken bir hata oluştu", {
                 position: "bottom-right",
                 autoClose: 3000,

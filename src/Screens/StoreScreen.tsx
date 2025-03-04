@@ -41,6 +41,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { Dayjs } from 'dayjs';
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import apiClient from "../Utils/ApiClient";
 
 dayjs.extend(isBetween);
 
@@ -87,21 +88,23 @@ const StoreScreen: React.FC<StoreScreenProps> = memo(({ onToggleMenu }) => {
     dateRange: null
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
-    setLoading(true);
+    setLoading(true);  // Yükleme durumunu true yapıyoruz
     try {
-      const response = await axios.get(apiUrl.store);
-      setData(response.data);
+      // apiClient ile veri çekme işlemi
+      const response = await apiClient.get(apiUrl.store);  // axios yerine apiClient kullanıldı
+      setData(response.data);  // Veriyi state'e aktarıyoruz
     } catch (error) {
-      message.error("Veri yüklenirken hata oluştu");
+      message.error("Veri yüklenirken hata oluştu");  // Hata durumunda mesaj gösteriyoruz
+      console.error("Error fetching data:", error);  // Hata detayını konsola yazıyoruz
     } finally {
-      setLoading(false);
+      setLoading(false);  // Yükleme durumunu false yapıyoruz
     }
   };
+
+  useEffect(() => {
+    fetchData();  // Fetch işlemini başlatıyoruz
+  }, []);
 
   const columns: ColumnsType<StoreData> = [
     {

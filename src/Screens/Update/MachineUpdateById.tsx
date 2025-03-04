@@ -18,6 +18,7 @@ import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title } = Typography;
 
@@ -27,65 +28,67 @@ const MachineUpdateById = () => {
   const [isLoadingMachine, setIsLoadingMachine] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    const fetchMachineDetails = async () => {
-      if (!id) return;
+  const fetchMachineDetails = async () => {
+    if (!id) return;
 
-      setIsLoadingMachine(true);
-      try {
-        const response = await axios.get(`${apiUrl.machine}/${id}`);
-        const data = response.data;
-
-        const updatedData = {
-          ...data,
-          purchaseDate: data.purchaseDate ? dayjs(data.purchaseDate) : null,
-          createdAt: data.createdAt ? dayjs(data.createdAt) : null,
-          updatedAt: data.updatedAt ? dayjs(data.updatedAt) : null,
-        };
-
-        form.setFieldsValue(updatedData);
-      } catch (error) {
-        console.error("Error fetching machine details:", error);
-        toast.error("Makine bilgileri yüklenirken bir hata oluştu", {
-          position: "bottom-right",
-          autoClose: 3000,
-          theme: "colored",
-        });
-      } finally {
-        setIsLoadingMachine(false);
-      }
-    };
-
-    fetchMachineDetails();
-  }, [id, form]);
-
-  const onFinish = async (values: any) => {
-    setIsUpdating(true);
+    setIsLoadingMachine(true); // Yükleme başladığını belirtiyoruz
     try {
+      const response = await apiClient.get(`${apiUrl.machine}/${id}`);  // axios yerine apiClient
+      const data = response.data;
+
+      // Verileri düzenleyerek form alanlarına atıyoruz
+      const updatedData = {
+        ...data,
+        purchaseDate: data.purchaseDate ? dayjs(data.purchaseDate) : null,
+        createdAt: data.createdAt ? dayjs(data.createdAt) : null,
+        updatedAt: data.updatedAt ? dayjs(data.updatedAt) : null,
+      };
+
+      form.setFieldsValue(updatedData); // Form alanlarını güncelliyoruz
+    } catch (error) {
+      console.error("Makine bilgileri alınırken hata oluştu:", error);
+      toast.error("Makine bilgileri yüklenirken bir hata oluştu", {
+        position: "bottom-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+    } finally {
+      setIsLoadingMachine(false); // Yükleme bitiyor
+    }
+  };
+
+  useEffect(() => {
+    fetchMachineDetails();
+  }, [id, form]); // id veya form değiştiğinde bu effect çalışır
+
+// Form gönderme fonksiyonu
+  const onFinish = async (values: any) => {
+    setIsUpdating(true); // Güncelleme işlemi başladığını belirtiyoruz
+    try {
+      // Tarihleri uygun formata dönüştürüp düzenliyoruz
       const formattedValues = {
         ...values,
-        purchaseDate: values.purchaseDate
-          ? values.purchaseDate.toISOString()
-          : null,
+        purchaseDate: values.purchaseDate ? values.purchaseDate.toISOString() : null,
         createdAt: values.createdAt ? values.createdAt.toISOString() : null,
         updatedAt: values.updatedAt ? values.updatedAt.toISOString() : null,
       };
 
-      await axios.put(`${apiUrl.machine}/${id}`, formattedValues);
+      // Makineyi güncelliyoruz
+      await apiClient.put(`${apiUrl.machine}/${id}`, formattedValues);  // axios yerine apiClient
       toast.success("Makine başarıyla güncellendi", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
     } catch (error) {
-      console.error("Error updating machine:", error);
+      console.error("Makine güncellenirken hata oluştu:", error);
       toast.error("Makine güncellenirken bir hata oluştu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(false); // Güncelleme işlemi tamamlanıyor
     }
   };
 

@@ -13,6 +13,7 @@ import { apiUrl } from "../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { IoAddOutline } from "react-icons/io5";
+import apiClient from "../Utils/ApiClient";
 
 const { Option } = Select;
 
@@ -25,24 +26,30 @@ const MaintenanceRecordScreen = memo(() => {
   const [filterType, setFilterType] = useState("");
 
   useEffect(() => {
+    let isMounted = true; // Component'in mount durumunu takip et
+
     const fetchData = async () => {
-      setLoading(true);
+      setLoading(true); // Yeni istek başladığında loading aç
       try {
-        const response = await axios.get(`${apiUrl.maintenanceRecord}`);
-        setData(response.data);
+        const response = await apiClient.get(apiUrl.maintenanceRecord);
+        if (isMounted) setData(response.data);
       } catch (error) {
         console.error("Veri çekme hatası:", error);
-        toast.error("Veri alınırken hata oluştu", {
+        toast.error("Veri alınırken hata oluştu!", {
           position: "bottom-right",
           autoClose: 3000,
           theme: "colored",
         });
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false); // Sadece component mount durumundaysa güncelle
       }
     };
 
     fetchData();
+
+    return () => {
+      isMounted = false; // Component unmount olduğunda state update engellenir
+    };
   }, []);
 
   const filteredData = data.filter((record) => {

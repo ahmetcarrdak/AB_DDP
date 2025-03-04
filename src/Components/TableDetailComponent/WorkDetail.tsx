@@ -4,6 +4,7 @@ import { FaInfoCircle } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import { Spin } from "antd";
 import { apiUrl } from "../../Settings";
+import apiClient from "../../Utils/ApiClient";
 
 interface WorkDetailProps {
   id: number;
@@ -53,19 +54,19 @@ const WorkDetail = memo(({ id }: WorkDetailProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      setLoading(true); // Yükleme başlatıldı
       try {
-        const response = await axios.get(`${apiUrl.workById}/${id}`);
-        setWork(response.data);
-        setLoading(false);
+        const response = await apiClient.get(`${apiUrl.workById}/${id}`); // apiClient ile veri çekme
+        setWork(response.data); // Verileri state'e set et
       } catch (error) {
         console.error("Error fetching data:", error);
-        setLoading(false);
+      } finally {
+        setLoading(false); // Yükleme tamamlandı
       }
     };
 
-    fetchData();
-  }, [id]);
+    fetchData(); // Verileri çekme işlemi başlatılıyor
+  }, [id]); // id değiştiğinde yeniden çalışır
 
   return (
     <Spin spinning={loading} tip="İş verileri yükleniyor">

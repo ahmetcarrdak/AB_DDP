@@ -3,6 +3,7 @@ import { FaInfoCircle } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import axios from "axios";
 import { apiUrl } from "../../Settings";
+import apiClient from "../../Utils/ApiClient";
 
 interface Position {
   positionId: number;
@@ -44,17 +45,19 @@ const PersonDetail = memo(({ id }: PersonDetailProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Yüklemeyi başlatıyoruz
       try {
-        const response = await axios.get(`${apiUrl.personById}/${id}`);
-        setRow(response.data);
-        setLoading(false);
+        const response = await apiClient.get(`${apiUrl.personById}/${id}`); // apiClient ile veri çekme
+        setRow(response.data); // Row verisini set ediyoruz
       } catch (error) {
         console.error("Verileri çekerken bir hata oluştu:", error);
-        setLoading(false);
+      } finally {
+        setLoading(false); // Yükleme işlemi bitiyor
       }
     };
-    fetchData();
-  }, [id]);
+
+    fetchData(); // Verileri çekme fonksiyonu çalıştırılıyor
+  }, [id]); // id değiştiğinde fetchData tekrar çalışır
 
   const toggleDropdown = (dropdown: string) => {
     setActiveDropdown(activeDropdown === dropdown ? null : dropdown);

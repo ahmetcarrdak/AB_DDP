@@ -16,6 +16,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { apiUrl } from "../../Settings";
 import dayjs from "dayjs";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -32,7 +33,7 @@ const MachineFaultAddScreen = memo(() => {
     // Makine listesini çek
     const fetchMachines = async () => {
       try {
-        const response = await axios.get(`${apiUrl.machine}`);
+        const response = await apiClient.get(`${apiUrl.machine}`); // apiClient ile GET isteği
         setMachines(response.data);
       } catch (error) {
         console.error("Makine verileri alınamadı:", error);
@@ -54,7 +55,8 @@ const MachineFaultAddScreen = memo(() => {
         updatedAt: new Date().toISOString(),
       };
 
-      await axios.post(`${apiUrl.machineFault}`, faultData);
+      // apiClient ile POST isteği
+      await apiClient.post(`${apiUrl.machineFault}`, faultData);
 
       toast.success("Arıza başarıyla eklendi", {
         position: "bottom-right",
@@ -62,7 +64,7 @@ const MachineFaultAddScreen = memo(() => {
         theme: "colored",
       });
 
-      form.resetFields();
+      form.resetFields(); // Formu sıfırlıyoruz
     } catch (error) {
       console.error("Arıza ekleme hatası:", error);
       toast.error("Arıza eklenirken bir hata oluştu", {

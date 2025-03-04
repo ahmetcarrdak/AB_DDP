@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, DatePicker, Select, message } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
+import apiClient from "../../Utils/ApiClient";
 
 const MaintenanceCreateScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -12,39 +13,40 @@ const MaintenanceCreateScreen: React.FC = () => {
   useEffect(() => {
     const fetchMachines = async () => {
       try {
-        const response = await axios.get('API_URL_FOR_MACHINES');
-        setMachines(response.data); // Makineleri API'den aldık
+        const response = await apiClient.get('API_URL_FOR_MACHINES'); // API ile makineleri alıyoruz
+        setMachines(response.data); // Makineleri state'e set ediyoruz
       } catch (error) {
         message.error('Failed to load machines');
       }
     };
 
     fetchMachines();
-  }, []);
+  }, []); // Component mount olduğunda sadece bir kez çalışacak
 
+  // Bakım kaydını oluşturma
   const handleSubmit = async (values: any) => {
     const payload = {
       maintenanceRecordId: 0, // Server tarafından otomatik oluşturulacak
-      machineId: values.machineId,
-      maintenanceType: values.maintenanceType,
-      description: values.description,
-      maintenanceDate: values.maintenanceDate.format(),
-      performedBy: values.performedBy,
-      notes: values.notes,
+      machineId: values.machineId, // Seçilen makine ID'si
+      maintenanceType: values.maintenanceType, // Bakım türü
+      description: values.description, // Açıklama
+      maintenanceDate: values.maintenanceDate.format(), // Bakım tarihi
+      performedBy: values.performedBy, // Bakımı yapan kişi
+      notes: values.notes, // Notlar
     };
 
-    setIsSubmitting(true);
-    setLoading(true);
+    setIsSubmitting(true); // Gönderim işlemi başladığını belirtiyoruz
+    setLoading(true); // Yükleniyor durumunu başlatıyoruz
 
     try {
       // Bakım kaydını API'ye gönderme
-      await axios.post('API_URL_FOR_MAINTENANCE', payload);
-      message.success('Maintenance record created successfully!');
+      await apiClient.post('API_URL_FOR_MAINTENANCE', payload);
+      message.success('Maintenance record created successfully!'); // Başarı mesajı
     } catch (error) {
-      message.error('Failed to create maintenance record');
+      message.error('Failed to create maintenance record'); // Hata mesajı
     } finally {
-      setIsSubmitting(false);
-      setLoading(false);
+      setIsSubmitting(false); // Gönderim durumu bitti
+      setLoading(false); // Yükleniyor durumu bitti
     }
   };
 

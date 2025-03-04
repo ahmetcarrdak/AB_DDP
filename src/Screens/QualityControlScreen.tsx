@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, {memo, useCallback, useEffect, useState} from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
@@ -33,6 +33,7 @@ import moment from "moment";
 import type { ColumnsType } from "antd/es/table";
 import type { RangePickerProps } from "antd/es/date-picker";
 import type { Dayjs } from "dayjs";
+import apiClient from "../Utils/ApiClient";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -68,22 +69,23 @@ const QualityControlScreen = memo(() => {
     testedBy: ""
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${apiUrl.qualityControl}`);
+      // apiClient ile veri çekme işlemi
+      const response = await apiClient.get(apiUrl.qualityControl);  // axios yerine apiClient kullanıldı
       setData(response.data);
     } catch (error) {
-      message.error("Veri yüklenirken bir hata oluştu");
-      console.error("Error fetching data:", error);
+      console.error("Veri çekme hatası:", error);
+      message.error("Veri yüklenirken bir hata oluştu");  // Antd error message
     } finally {
       setLoading(false);
     }
-  };
+  }, []);  // fetchData'yi callback olarak tanımladık
+
+  useEffect(() => {
+    fetchData();  // fetchData fonksiyonunu çağırıyoruz
+  }, [fetchData]);
 
   const columns: ColumnsType<QualityControlRecord> = [
     {

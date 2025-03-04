@@ -226,10 +226,22 @@ const AuthScreen: React.FC = () => {
         borderRadius: '15px',
         boxShadow: '0 8px 24px rgba(0,0,0,0.1)'
       }}>
-        <div className="auth-logo" style={{ marginBottom: '24px'}}>
-          <img src="logo.png" alt="Logo" style={{ width: '200px' }} />
+        <div className="auth-logo" style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: '24px',
+          width: '100%',
+        }}>
+          <img src="logo.png" alt="Logo" style={{
+            width: '200px',
+            height: '120px',
+          }} />
         </div>
-        <Title level={3} style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <Title level={3} style={{
+          textAlign: 'center',
+          marginBottom: '24px',
+        }}>
           {!isLogin ? 'Firma Kaydı' : (isCompanyLogin ? 'Firma Girişi' : 'Personel Girişi')}
         </Title>
         

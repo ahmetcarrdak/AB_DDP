@@ -16,6 +16,7 @@ import axios from "axios";
 import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -57,12 +58,14 @@ const MaterialAddScreen = memo(() => {
         updatedDate: new Date(),
       };
 
-      await axios.post(apiUrl.createStore, materialData);
+      // apiClient ile veri gönderme
+      await apiClient.post(apiUrl.createStore, materialData);
       toast.success("Malzeme başarıyla oluşturuldu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
+
       form.resetFields();
     } catch (error) {
       console.error("Error creating material:", error);

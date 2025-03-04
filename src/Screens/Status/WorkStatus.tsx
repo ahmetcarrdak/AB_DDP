@@ -2,6 +2,8 @@ import React, { memo, useEffect, useState, useMemo } from "react";
 import { Table, Card, Typography } from "antd";
 import axios from "axios";
 import { apiUrl } from "../../Settings";
+import apiClient from "../../Utils/ApiClient";
+import {toast, ToastContainer} from "react-toastify";
 
 const { Title, Text } = Typography;
 
@@ -28,10 +30,13 @@ const WorkStatus = memo(() => {
   // Verileri çekme işlemi
   useEffect(() => {
     const fetchInitialData = async () => {
+      setIsLoading(true); // Yükleme başladığını belirtiyoruz
+
       try {
+        // API isteklerini paralel olarak yapıyoruz
         const [stationsResponse, worksResponse] = await Promise.all([
-          axios.get<Station[]>(apiUrl.station),
-          axios.get<Work[]>(apiUrl.stationInfoWork),
+          apiClient.get<Station[]>(apiUrl.station), // apiClient kullanarak GET isteği
+          apiClient.get<Work[]>(apiUrl.stationInfoWork), // apiClient kullanarak GET isteği
         ]);
 
         // İstasyonları sırala
@@ -50,8 +55,13 @@ const WorkStatus = memo(() => {
         setWorksByStation(groupedWorks);
       } catch (error) {
         console.error("Veri çekme hatası:", error);
+        toast.error("Veriler alınırken bir hata oluştu", {
+          position: "bottom-right",
+          autoClose: 3000,
+          theme: "colored",
+        });
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Yükleme tamamlandı
       }
     };
 
@@ -95,6 +105,7 @@ const WorkStatus = memo(() => {
 
   return (
       <div style={{ padding: "20px" }}>
+        <ToastContainer />
         <Title level={2}>İstasyonlar ve Yarı Mamüller</Title>
         {isLoading ? (
             <Card>

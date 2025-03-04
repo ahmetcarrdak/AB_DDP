@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import HeaderComponent from "../Components/HeaderComponent";
 import { apiUrl } from "../Settings";
+import apiClient from "../Utils/ApiClient"; // apiClient'ı içeri aktar
 import OrderStatus from "./Status/OrderStatus";
 import WorkStatus from "./Status/WorkStatus";
 
@@ -45,59 +46,62 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onToggleMenu, activeTab, onTabC
     setSelectedId(id);
   };
 
-  useEffect(() => {
-    axios
-      .get(apiUrl.machineFault5)
-      .then((response) => {
-        const transformedData = response.data.map((machine: any) => ({
-          name: machine.name,
-          count: machine.totalFault,
-        }));
-        setMachineFailures(transformedData);
-      })
-      .catch((error) => {
-        console.error("API'den veri alınırken hata oluştu:", error);
-      });
+  const fetchData = async () => {
+    try {
+      const [
+        machineFaultRes,
+        machineLatestFaultRes,
+        orderStatusRes,
+        workstationJobsRes,
+      ] = await Promise.allSettled([
+        apiClient.get(apiUrl.machineFault5),
+        apiClient.get(apiUrl.machineLatestFault),
+        apiClient.get(apiUrl.orderStatuses),
+        apiClient.get(apiUrl.topPendingStations),
+      ]);
 
-    axios
-      .get(apiUrl.machineLatestFault)
-      .then((response) => {
-        const failures = response.data.map(
-          (machine: any) =>
-            `${machine.name} - ${new Date(machine.createdAt).toLocaleString()}`
+      if (machineFaultRes.status === "fulfilled") {
+        setMachineFailures(
+            machineFaultRes.value.data.map((machine: any) => ({
+              name: machine.name,
+              count: machine.totalFault,
+            }))
         );
-        setRecentFailures(failures);
-      })
-      .catch((error) => {
-        console.error("Son arızalar alınırken hata oluştu:", error);
-      });
+      }
 
-    axios
-      .get("http://localhost:5262/api/Order/statuses")
-      .then((response) => {
-        const transformedOrderData = response.data.map((order: any) => ({
-          name: order.statusName,
-          count: order.count,
-        }));
-        setOrderData(transformedOrderData);
-      })
-      .catch((error) => {
-        console.error("Sipariş durumları alınırken hata oluştu:", error);
-      });
+      if (machineLatestFaultRes.status === "fulfilled") {
+        setRecentFailures(
+            machineLatestFaultRes.value.data.map(
+                (machine: any) =>
+                    `${machine.name} - ${new Date(machine.createdAt).toLocaleString()}`
+            )
+        );
+      }
 
-    // İş istasyonlarındaki bekleyen işlerin verisini alalım
-    axios
-      .get("http://localhost:5262/api/station/top-pending-stations")  // API'nizin endpointi
-      .then((response) => {
-        const transformedWorkstationJobs = response.data.map((station: any) => ({
-          name: station.stationName,
-          jobs: station.totalPendingItems,  // Bekleyen toplam iş sayısı
-        }));
-        setWorkstationJobs(transformedWorkstationJobs);
-      })
-      .catch((error) => {
-        console.error("İş İstasyonlarındaki İşler alınırken hata oluştu:", error);
-      });
+      if (orderStatusRes.status === "fulfilled") {
+        setOrderData(
+            orderStatusRes.value.data.map((order: any) => ({
+              name: order.statusName,
+              count: order.count,
+            }))
+        );
+      }
+
+      if (workstationJobsRes.status === "fulfilled") {
+        setWorkstationJobs(
+            workstationJobsRes.value.data.map((station: any) => ({
+              name: station.stationName,
+              jobs: station.totalPendingItems,
+            }))
+        );
+      }
+    } catch (error) {
+      console.error("Veri çekerken hata oluştu:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   const tooltipFormatter = (value: any) => [`${value}`, "Arıza Sayısı"];

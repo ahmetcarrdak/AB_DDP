@@ -18,6 +18,7 @@ import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title } = Typography;
 
@@ -27,69 +28,69 @@ const MaterialUpdateById = () => {
   const [isLoadingMaterial, setIsLoadingMaterial] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    const fetchMaterialDetails = async () => {
-      if (!id) return;
+  const fetchMaterialDetails = async () => {
+    if (!id) return; // id yoksa işlemi başlatma
 
-      setIsLoadingMaterial(true);
-      try {
-        const response = await axios.get(`${apiUrl.storeById}/${id}`);
-        const data = response.data;
-
-        const updatedData = {
-          ...data,
-          purchaseDate: data.purchaseDate ? dayjs(data.purchaseDate) : null,
-          expiryDate: data.expiryDate ? dayjs(data.expiryDate) : null,
-          lastInventoryDate: data.lastInventoryDate
-              ? dayjs(data.lastInventoryDate)
-              : null,
-        };
-
-        form.setFieldsValue(updatedData);
-      } catch (error) {
-        console.error("Error fetching material details:", error);
-        toast.error("Malzeme bilgileri yüklenirken bir hata oluştu", {
-          position: "bottom-right",
-          autoClose: 3000,
-          theme: "colored",
-        });
-      } finally {
-        setIsLoadingMaterial(false);
-      }
-    };
-
-    fetchMaterialDetails();
-  }, [id, form]);
-
-  const onFinish = async (values: any) => {
-    setIsUpdating(true);
+    setIsLoadingMaterial(true); // Yükleme başladığını belirtiyoruz
     try {
-      const formattedValues = {
-        ...values,
-        purchaseDate: values.purchaseDate
-            ? values.purchaseDate.toISOString()
-            : null,
-        expiryDate: values.expiryDate ? values.expiryDate.toISOString() : null,
-        lastInventoryDate: values.lastInventoryDate
-            ? values.lastInventoryDate.toISOString()
+      const response = await apiClient.get(`${apiUrl.storeById}/${id}`);  // apiClient kullanıyoruz
+      const data = response.data;
+
+      // Verileri düzenleyerek form alanlarına atıyoruz
+      const updatedData = {
+        ...data,
+        purchaseDate: data.purchaseDate ? dayjs(data.purchaseDate) : null,
+        expiryDate: data.expiryDate ? dayjs(data.expiryDate) : null,
+        lastInventoryDate: data.lastInventoryDate
+            ? dayjs(data.lastInventoryDate)
             : null,
       };
 
-      await axios.put(`${apiUrl.storeUpdate}`, formattedValues);
+      form.setFieldsValue(updatedData); // Form alanlarını güncelliyoruz
+    } catch (error) {
+      console.error("Malzeme bilgileri alınırken hata oluştu:", error);
+      toast.error("Malzeme bilgileri yüklenirken bir hata oluştu", {
+        position: "bottom-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+    } finally {
+      setIsLoadingMaterial(false); // Yükleme bitiyor
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterialDetails();
+  }, [id, form]); // id veya form değiştiğinde bu effect çalışır
+
+// Form gönderme fonksiyonu
+  const onFinish = async (values: any) => {
+    setIsUpdating(true); // Güncelleme işlemi başladığını belirtiyoruz
+    try {
+      // Tarihleri uygun formata dönüştürüp düzenliyoruz
+      const formattedValues = {
+        ...values,
+        purchaseDate: values.purchaseDate ? values.purchaseDate.toISOString() : null,
+        expiryDate: values.expiryDate ? values.expiryDate.toISOString() : null,
+        lastInventoryDate: values.lastInventoryDate ? values.lastInventoryDate.toISOString() : null,
+      };
+
+      // Malzemeyi güncelliyoruz
+      await apiClient.put(`${apiUrl.updateStore}`, formattedValues);  // apiClient kullanıyoruz
       toast.success("Malzeme başarıyla güncellendi", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
     } catch (error) {
-      console.error("Error updating material:", error);
+      console.error("Malzeme güncellenirken hata oluştu:", error);
       toast.error("Malzeme güncellenirken bir hata oluştu", {
         position: "bottom-right",
         autoClose: 3000,
         theme: "colored",
       });
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(false); // Güncelleme işlemi tamamlanıyor
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect} from "react";
 import {
     Form,
     Input,
@@ -15,14 +15,15 @@ import {
 } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
-import { apiUrl } from "../../Settings";
-import { toast, ToastContainer } from "react-toastify";
+import {apiUrl} from "../../Settings";
+import {toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useParams } from "react-router-dom";
-import { DriverLicense, driverLicenses  } from "../../constants"; // Sabitler ayrı bir dosyada
+import {useParams} from "react-router-dom";
+import {DriverLicense, driverLicenses} from "../../constants"; // Sabitler ayrı bir dosyada
+import apiClient from "../../Utils/ApiClient";
 
-const { Title } = Typography;
-const { Option } = Select;
+const {Title} = Typography;
+const {Option} = Select;
 
 // Interface'ler ayrı bir dosyada tutulabilir
 interface Position {
@@ -53,21 +54,20 @@ interface PersonDetails {
 }
 
 const PersonUpdateById = () => {
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const [form] = Form.useForm();
     const [positions, setPositions] = useState<Position[]>([]);
     const [personDetails, setPersonDetails] = useState<PersonDetails | null>(null);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // Pozisyonları çek
     useEffect(() => {
         const fetchPositions = async () => {
             try {
-                const response = await axios.get(`${apiUrl.positions}`);
+                const response = await apiClient.get(`${apiUrl.positions}`);  // apiClient kullanımı
                 setPositions(response.data);
             } catch (error) {
-                console.error("Error fetching positions:", error);
+                console.error("Pozisyonlar alınırken hata oluştu:", error);
                 toast.error("Pozisyonlar yüklenirken bir hata oluştu", {
                     position: "bottom-right",
                     autoClose: 3000,
@@ -77,18 +77,19 @@ const PersonUpdateById = () => {
         };
 
         fetchPositions();
-    }, []);
+    }, []); // İlk render'da bir kez çalışır
 
-    // Personel detaylarını çek
+// Personel detaylarını al
     useEffect(() => {
         const fetchPersonDetails = async () => {
             if (!id) return;
 
-            setIsLoadingDetails(true);
+            setIsLoadingDetails(true); // Yükleme başladığını belirtiyoruz
             try {
-                const response = await axios.get(`${apiUrl.personById}/${id}`);
+                const response = await apiClient.get(`${apiUrl.personById}/${id}`); // apiClient kullanımı
                 const data = response.data;
 
+                // Verileri düzenleyerek güncellenmiş veri ile formu güncelliyoruz
                 const updatedData = {
                     ...data,
                     lastHealthCheck: data.lastHealthCheck ? dayjs(data.lastHealthCheck) : null,
@@ -98,48 +99,49 @@ const PersonUpdateById = () => {
                 setPersonDetails(updatedData);
                 form.setFieldsValue(updatedData);
             } catch (error) {
-                console.error("Error fetching person details:", error);
+                console.error("Personel bilgileri alınırken hata oluştu:", error);
                 toast.error("Personel bilgileri yüklenirken bir hata oluştu", {
                     position: "bottom-right",
                     autoClose: 3000,
                     theme: "colored",
                 });
             } finally {
-                setIsLoadingDetails(false);
+                setIsLoadingDetails(false); // Yükleme bitiyor
             }
         };
 
         fetchPersonDetails();
-    }, [id, form]);
+    }, [id, form]); // id veya form değiştiğinde bu effect çalışır
 
-    // Form gönderildiğinde çalışır
+// Personel güncelleme fonksiyonu
     const onFinish = async (values: any) => {
-        setIsUpdating(true);
+        setIsUpdating(true); // Güncelleme işlemi başladığını belirtiyoruz
         try {
+            // Tarihleri uygun formata dönüştürüp düzenliyoruz
             const formattedValues = {
                 ...values,
                 terminationDate: values.terminationDate ? values.terminationDate.toISOString() : null,
                 lastHealthCheck: values.lastHealthCheck ? values.lastHealthCheck.toISOString() : null,
             };
 
-            await axios.put(`${apiUrl.personUpdate}`, formattedValues);
+            // Personeli güncelliyoruz
+            await apiClient.put(`${apiUrl.updatePerson}`, formattedValues); // apiClient kullanımı
             toast.success("Personel başarıyla güncellendi", {
                 position: "bottom-right",
                 autoClose: 3000,
                 theme: "colored",
             });
         } catch (error) {
-            console.error("Error updating person:", error);
+            console.error("Personel güncellenirken hata oluştu:", error);
             toast.error("Personel güncellenirken bir hata oluştu", {
                 position: "bottom-right",
                 autoClose: 3000,
                 theme: "colored",
             });
         } finally {
-            setIsUpdating(false);
+            setIsUpdating(false); // Güncelleme işlemi tamamlanıyor
         }
     };
-
     // Ehliyet durumu değiştiğinde çalışır
     const onDriverLicenseSwitchChange = (checked: boolean) => {
         form.setFieldsValue({
@@ -152,23 +154,23 @@ const PersonUpdateById = () => {
 
     return (
         <div className="person-update-page">
-            <ToastContainer />
+            <ToastContainer/>
             <Title level={2}>Personel Bilgileri Düzenle</Title>
 
             <Spin spinning={isLoadingDetails} tip="Personel bilgileri yükleniyor...">
                 <Card>
                     {personDetails && (
                         <Form form={form} layout="vertical" onFinish={onFinish}>
-                            <ContactInformationForm />
-                            <CompanyInformationForm positions={positions} />
-                            <EmergencyInformationForm />
+                            <ContactInformationForm/>
+                            <CompanyInformationForm positions={positions}/>
+                            <EmergencyInformationForm/>
                             <DriverLicenseForm
                                 driverLicenses={driverLicenses}
                                 onDriverLicenseSwitchChange={onDriverLicenseSwitchChange}
                                 form={form}
                             />
-                            <HealthInformationForm />
-                            <FormButtons isUpdating={isUpdating} />
+                            <HealthInformationForm/>
+                            <FormButtons isUpdating={isUpdating}/>
                         </Form>
                     )}
                 </Card>
@@ -182,44 +184,44 @@ const ContactInformationForm = () => (
     <>
         <Row gutter={16}>
             <Col xs={24}>
-                <h2 style={{ textDecoration: "underline" }}>İletişim Bilgileri</h2>
+                <h2 style={{textDecoration: "underline"}}>İletişim Bilgileri</h2>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="phoneNumber" label="Telefon Numarası">
-                    <Input />
+                    <Input/>
                 </Form.Item>
                 <Form.Item name="id" hidden>
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="email" label="E-posta">
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="address" label="Adres">
-                    <Input.TextArea rows={2} />
+                    <Input.TextArea rows={2}/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="educationLevel" label="Eğitim Seviyesi">
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
         </Row>
     </>
 );
 
-const CompanyInformationForm = ({ positions }: { positions: Position[] }) => (
+const CompanyInformationForm = ({positions}: { positions: Position[] }) => (
     <>
         <Row gutter={16}>
             <Col xs={24}>
-                <h2 style={{ textDecoration: "underline" }}>Şirketi İçi Bilgileri</h2>
+                <h2 style={{textDecoration: "underline"}}>Şirketi İçi Bilgileri</h2>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="department" label="Departman">
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
@@ -235,17 +237,17 @@ const CompanyInformationForm = ({ positions }: { positions: Position[] }) => (
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="salary" label="Maaş">
-                    <InputNumber style={{ width: "100%" }} />
+                    <InputNumber style={{width: "100%"}}/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="vacationDays" label="Yıllık izin sayısı">
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="shiftSchedule" label="Vardiya tipi">
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
         </Row>
@@ -256,16 +258,16 @@ const EmergencyInformationForm = () => (
     <>
         <Row gutter={16}>
             <Col xs={24}>
-                <h2 style={{ textDecoration: "underline" }}>Acil Durum Bilgileri</h2>
+                <h2 style={{textDecoration: "underline"}}>Acil Durum Bilgileri</h2>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="emergencyContact" label="Acil İletişim">
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="emergencyPhone" label="Acil İletişim Telefon">
-                    <Input />
+                    <Input/>
                 </Form.Item>
             </Col>
         </Row>
@@ -284,11 +286,11 @@ const DriverLicenseForm = ({
     <>
         <Row gutter={16}>
             <Col xs={24}>
-                <h2 style={{ textDecoration: "underline" }}>Araç Kabiliyeti</h2>
+                <h2 style={{textDecoration: "underline"}}>Araç Kabiliyeti</h2>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="hasDriverLicense" label="Ehliyet Durumu" valuePropName="checked">
-                    <Switch onChange={onDriverLicenseSwitchChange} />
+                    <Switch onChange={onDriverLicenseSwitchChange}/>
                 </Form.Item>
             </Col>
             {form.getFieldValue("hasDriverLicense") && (
@@ -312,28 +314,28 @@ const HealthInformationForm = () => (
     <>
         <Row gutter={16}>
             <Col xs={24}>
-                <h2 style={{ textDecoration: "underline" }}>Sağlık durumları</h2>
+                <h2 style={{textDecoration: "underline"}}>Sağlık durumları</h2>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="hasHealthInsurance" label="Sağlık Sigortası" valuePropName="checked">
-                    <Switch />
+                    <Switch/>
                 </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Form.Item name="lastHealthCheck" label="Son Sağlık Kontrolü">
-                    <DatePicker style={{ width: "100%" }} />
+                    <DatePicker style={{width: "100%"}}/>
                 </Form.Item>
             </Col>
             <Col xs={24}>
                 <Form.Item name="notes" label="Notlar">
-                    <Input.TextArea rows={4} />
+                    <Input.TextArea rows={4}/>
                 </Form.Item>
             </Col>
         </Row>
     </>
 );
 
-const FormButtons = ({ isUpdating }: { isUpdating: boolean }) => (
+const FormButtons = ({isUpdating}: { isUpdating: boolean }) => (
     <Row>
         <Col xs={24}>
             <Form.Item>
@@ -343,7 +345,7 @@ const FormButtons = ({ isUpdating }: { isUpdating: boolean }) => (
                             type="primary"
                             htmlType="submit"
                             loading={isUpdating}
-                            style={{ width: '100%', backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                            style={{width: '100%', backgroundColor: '#52c41a', borderColor: '#52c41a'}}
                         >
                             {isUpdating ? 'Güncelleniyor...' : 'Kaydet'}
                         </Button>
@@ -353,7 +355,7 @@ const FormButtons = ({ isUpdating }: { isUpdating: boolean }) => (
                             type="primary"
                             htmlType="button"
                             loading={isUpdating}
-                            style={{ width: '100%', backgroundColor: '#faad14', borderColor: '#faad14' }}
+                            style={{width: '100%', backgroundColor: '#faad14', borderColor: '#faad14'}}
                         >
                             {isUpdating ? 'Güncelleniyor...' : 'İşten Ayrıldı'}
                         </Button>
@@ -363,7 +365,7 @@ const FormButtons = ({ isUpdating }: { isUpdating: boolean }) => (
                             type="primary"
                             htmlType="button"
                             loading={isUpdating}
-                            style={{ width: '100%', backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' }}
+                            style={{width: '100%', backgroundColor: '#ff4d4f', borderColor: '#ff4d4f'}}
                         >
                             {isUpdating ? 'Güncelleniyor...' : 'Personeli Sil'}
                         </Button>

@@ -31,6 +31,7 @@ import { apiUrl } from "../Settings";
 import type { ColumnsType } from "antd/es/table";
 import moment from "moment";
 import { Dayjs } from "dayjs";
+import apiClient from "../Utils/ApiClient";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -68,19 +69,25 @@ const MachineScreen = memo(() => {
   });
 
   useEffect(() => {
+    let isMounted = true; // Component'in mount durumunu takip et
+
     const fetchData = async () => {
       try {
-        const response = await axios.get(apiUrl.machine);
-        setData(response.data);
+        const response = await apiClient.get(apiUrl.machine);
+        if (isMounted) setData(response.data);
       } catch (error) {
         message.error("Veri yüklenirken bir hata oluştu");
         console.error("Error fetching data:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      isMounted = false; // Component unmount olduğunda istek iptal edilir
+    };
   }, []);
 
   const columns: ColumnsType<MachineRecord> = [

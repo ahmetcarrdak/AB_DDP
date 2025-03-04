@@ -16,6 +16,7 @@ import axios from "axios";
 import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../../Utils/ApiClient";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -50,6 +51,7 @@ const OrderCreateScreen = memo(() => {
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
+      // Tarih alanlarını ISO formatında dönüştürme
       const formattedValues = {
         ...values,
         orderDate: values.orderDate?.toISOString(),
@@ -58,7 +60,8 @@ const OrderCreateScreen = memo(() => {
         cancellationDate: values.cancellationDate?.toISOString(),
       };
 
-      const response = await axios.post(apiUrl.createOrder, formattedValues);
+      // apiClient ile veri gönderme
+      const response = await apiClient.post(apiUrl.createOrder, formattedValues);
       toast.success("Sipariş başarıyla oluşturuldu", {
         position: "bottom-right",
         autoClose: 3000,
@@ -69,6 +72,7 @@ const OrderCreateScreen = memo(() => {
         pauseOnHover: true,
         theme: "colored",
       });
+
       form.resetFields();
     } catch (error) {
       console.error("Error creating order:", error);

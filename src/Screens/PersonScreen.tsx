@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, {memo, useCallback, useEffect, useState} from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
@@ -18,34 +18,27 @@ import {
     Switch,
     Drawer,
     Form,
-    message,
-    Spin,
     Typography,
     Row,
     Col,
     Checkbox,
-    DatePicker
 } from "antd";
 import {
     UploadOutlined,
     DownloadOutlined,
     UserAddOutlined,
-    UsergroupAddOutlined,
     EditOutlined,
     SaveOutlined,
     CloseOutlined,
     SearchOutlined,
     FilterOutlined,
-    FileExcelOutlined,
     EyeOutlined,
-    PaperClipOutlined
 } from "@ant-design/icons";
 import { apiUrl } from "../Settings";
 import PersonDetail from "../Components/TableDetailComponent/PersonDetail";
 import * as XLSX from 'xlsx';
 import type { ColumnsType } from 'antd/es/table';
-import type { TableProps } from 'antd/es/table';
-import type { UploadProps } from 'antd/es/upload';
+import apiClient from "../Utils/ApiClient";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -120,80 +113,105 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
     });
     const [uploading, setUploading] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
 
     useEffect(() => {
         filterData();
     }, [data, searchText, filters, columnFilters]);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
+        let isMounted = true;
+        setLoading(true);
+
         try {
+            // API talepleri paralel olarak yapılır
             const [personResponse, positionResponse] = await Promise.all([
-                axios.get(apiUrl.person),
-                axios.get(apiUrl.positions)
+                apiClient.get(apiUrl.person),  // apiClient kullanıldı
+                apiClient.get(apiUrl.positions), // apiClient kullanıldı
             ]);
 
+            if (!isMounted) return;
+
+            // Geçersiz veri kontrolü
             if (!personResponse.data || !positionResponse.data) {
-                throw new Error('Invalid response data');
+                throw new Error("Invalid response data");
             }
 
+            // Personel verilerine pozisyon adını ekle
             const processedData = personResponse.data.map((person: any) => ({
                 ...person,
-                positionName: positionResponse.data.find(
-                    (p: any) => p.positionId === person.positionId
-                )?.positionName || 'Unknown'
+                positionName:
+                    positionResponse.data.find((p: any) => p.positionId === person.positionId)
+                        ?.positionName || "Unknown", // Pozisyon ismi bulunamazsa "Unknown" olarak ayarla
             }));
 
-            setData(processedData || []);
-            setFilteredData(processedData || []);
-            setPositions(positionResponse.data || []);
+            // Verileri state'e set et
+            setData(processedData);
+            setFilteredData(processedData);
+            setPositions(positionResponse.data);
         } catch (error) {
-            toast.error('Veri yüklenirken hata oluştu');
+            console.error("Veri çekme hatası:", error);
+            toast.error("Veri yüklenirken hata oluştu");
             setData([]);
             setFilteredData([]);
             setPositions([]);
         } finally {
             setLoading(false);
         }
-    };
+
+        // Cleanup function
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+// useEffect ile veri çekme işlemi
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleSaveAll = async () => {
         try {
             setLoading(true);
-            
-            // Check if there are any edited records
+
+            // Eğer değişiklik yapılmadıysa kullanıcıyı uyar
             if (Object.keys(editedData).length === 0) {
-                toast.warning('Değişiklik yapılmadı');
+                toast.warning("Değişiklik yapılmadı");
                 return;
             }
 
-            const updates: UpdatePersonData[] = Object.values(editedData).map(person => ({
+            // Güncelleme verilerini hazırlama
+            const updates = Object.values(editedData).map((person) => ({
                 id: person.id,
-                firstName: person.firstName || '', // Provide default values
-                lastName: person.lastName || '',
-                department: person.department || '',
+                firstName: person.firstName || "",
+                lastName: person.lastName || "",
+                department: person.department || "",
                 positionId: person.positionId || 0,
-                phoneNumber: person.phoneNumber || '',
-                email: person.email || '',
-                isActive: typeof person.isActive === 'boolean' ? person.isActive : true
+                phoneNumber: person.phoneNumber || "",
+                email: person.email || "",
+                isActive: typeof person.isActive === "boolean" ? person.isActive : true, // Aktiflik kontrolü
             }));
 
+            // Eğer güncellenmesi gereken veri yoksa uyarı göster
             if (updates.length === 0) {
-                toast.warning('Güncellenecek veri bulunamadı');
+                toast.warning("Güncellenecek veri bulunamadı");
                 return;
             }
 
-            console.log('Updates being sent:', updates);
-            await axios.post(apiUrl.personCollectiveUpdate, updates);
-            toast.success('Güncellemeler başarıyla kaydedildi');
+            console.log("Updates being sent:", updates);
+
+            // Güncellemeleri API'ye gönder
+            await apiClient.post(apiUrl.personCollectiveUpdate, updates);  // apiClient kullanıldı
+
+            // Başarılı işlem mesajı
+            toast.success("Güncellemeler başarıyla kaydedildi");
             setIsEditing(false);
-            setEditedData({});
+            setEditedData({}); // Düzenlenen veriyi sıfırla
+
+            // Veri yenileme işlemi
             await fetchData();
         } catch (error) {
-            console.error('Update error:', error);
-            toast.error(`Güncellemeler kaydedilirken hata oluştu`);
+            console.error("Update error:", error);
+            toast.error("Güncellemeler kaydedilirken hata oluştu");
         } finally {
             setLoading(false);
         }
@@ -580,7 +598,7 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
                                 icon={<FilterOutlined />}
                                 onClick={() => setFilterDrawerVisible(true)}
                             >
-                                Filters
+                                Filtrele
                             </Button>
 
                             <Select
@@ -588,16 +606,16 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
                                 onChange={(value: 'default' | 'compact' | 'card') => setTableView(value)}
                                 style={{ width: 120 }}
                             >
-                                <Option value="default">Default View</Option>
-                                <Option value="compact">Compact</Option>
-                                <Option value="card">Card View</Option>
+                                <Option value="default">Varsayılan Görünüm</Option>
+                                <Option value="compact">Sıkıştırılmış Görünüm</Option>
+                                <Option value="card">Kart Görünüm</Option>
                             </Select>
 
                             <Button
                                 icon={<DownloadOutlined />}
                                 onClick={handleExport}
                             >
-                                Export
+                                Dışa Aktar
                             </Button>
 
                             {isEditing ? (
@@ -608,7 +626,7 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
                                         onClick={handleSaveAll}
                                         loading={loading}
                                     >
-                                        Save All
+                                        Hepsini Kaydet
                                     </Button>
                                     <Button
                                         icon={<CloseOutlined />}
@@ -617,7 +635,7 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
                                             setEditedData({});
                                         }}
                                     >
-                                        Cancel
+                                        İptal
                                     </Button>
                                 </>
                             ) : (
@@ -626,7 +644,7 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
                                     icon={<EditOutlined />}
                                     onClick={() => setIsEditing(true)}
                                 >
-                                    Edit Mode
+                                    Toplu Düzenleme
                                 </Button>
                             )}
 
@@ -635,7 +653,7 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
                                     type="primary"
                                     icon={<UserAddOutlined />}
                                 >
-                                    Add Person
+                                    Personel Ekle
                                 </Button>
                             </Link>
                         </Space>

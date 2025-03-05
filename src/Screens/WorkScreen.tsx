@@ -157,8 +157,8 @@ const WorkScreen = memo(() => {
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Tag color={status === "Tamamlandı" ? "green" : status === "Devam Ediyor" ? "blue" : "orange"}>
-          {status}
+        <Tag color={status === 3 ? "green" : status === 2 ? "blue" : "orange"}>
+          {status === 1 && ("Başlanmadı")}
         </Tag>
       ),
       filters: Array.from(new Set(data.map(item => item.status))).map(status => ({

@@ -49,7 +49,7 @@ const StoreDetail = memo(({ id }: StoreDetailProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiClient.get(`${apiUrl.storeById}/${id}`); // apiClient ile veri çekme
+        const response = await apiClient.get(apiUrl.storeById(`${id}`)); // Doğru çağrım
         setData(response.data); // data set ediliyor
         setRow({
           purchaseDate: response.data.purchaseDate || "",

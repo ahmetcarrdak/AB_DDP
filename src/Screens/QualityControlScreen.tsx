@@ -112,7 +112,7 @@ const QualityControlScreen = memo(() => {
       dataIndex: "testResult",
       key: "testResult",
       render: (result) => (
-        <Tag color={result === "Başarılı" ? "green" : result === "Başarısız" ? "red" : "orange"}>
+        <Tag color={result === "Geçti" ? "green" : result === "Kaldı" ? "red" : "orange"}>
           {result}
         </Tag>
       ),

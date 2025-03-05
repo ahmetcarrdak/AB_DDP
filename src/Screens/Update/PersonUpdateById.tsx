@@ -86,7 +86,8 @@ const PersonUpdateById = () => {
 
             setIsLoadingDetails(true); // Yükleme başladığını belirtiyoruz
             try {
-                const response = await apiClient.get(`${apiUrl.personById}/${id}`); // apiClient kullanımı
+                const url = apiUrl.personById(id); // Örnek: "Person/22"
+                const response = await apiClient.get(url); // Doğru URL
                 const data = response.data;
 
                 // Verileri düzenleyerek güncellenmiş veri ile formu güncelliyoruz

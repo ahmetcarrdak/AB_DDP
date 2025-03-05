@@ -22,7 +22,7 @@ export const apiUrl = {
 
     positions: "Positions",
 
-    store: "Store",
+    store: "Store/all",
     storeById: (id: string) => `Store/${id}`,
     createStore: "Store",
     updateStore: "Store/update",

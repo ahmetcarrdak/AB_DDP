@@ -33,7 +33,8 @@ const MaterialUpdateById = () => {
 
     setIsLoadingMaterial(true); // Yükleme başladığını belirtiyoruz
     try {
-      const response = await apiClient.get(`${apiUrl.storeById}/${id}`);  // apiClient kullanıyoruz
+      const url = apiUrl.storeById(id); // Örnek: "Person/22"
+      const response = await apiClient.get(url); // Doğru URL
       const data = response.data;
 
       // Verileri düzenleyerek form alanlarına atıyoruz

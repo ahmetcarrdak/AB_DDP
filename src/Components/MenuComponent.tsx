@@ -1,5 +1,5 @@
 import React, {memo, useState, useEffect, useRef} from "react";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 
 // React Icons - Bs (Bootstrap)
 import {BsFillInfoSquareFill} from "react-icons/bs";
@@ -41,7 +41,9 @@ interface MenuComponentProps {
     isVisible?: boolean;
 }
 
+
 const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisible = true }) => {
+    const navigate = useNavigate();
     const [isMenuBody, setMenuBody] = useState(true);
     const [activeMenu, setActiveMenu] = useState<number | null>(null);
     const [activeSubMenu, setActiveSubMenu] = useState<number | null>(null);
@@ -98,6 +100,20 @@ const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisib
         menu.title.toLowerCase().includes(searchTerm) || // Menü başlığı arama terimiyle eşleşiyorsa
         (menu.subMenu && menu.subMenu.some(sub => sub.title.toLowerCase().includes(searchTerm))) // Alt menülerdeki başlıkları kontrol et
     );
+
+    const handleLogout = () => {
+        // Kullanıcı bilgilerini temizle
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        // Auth sayfasına yönlendir
+        navigate("/auth");
+    };
+
+    const handleProfileMenu = () => {
+        // Kullanıcı profil sayfasına yönlendir
+        navigate("/profile");
+    }
 
     return (
         <>
@@ -235,7 +251,7 @@ const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisib
                         </div>
                     </div>
                     <div className="menu-profile">
-                        <div className={"menu-footer-profile-left"}>
+                        <div className={"menu-footer-profile-left"} onClick={handleProfileMenu}>
                             <img
                                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqSTTueKdjM4z7B0u5Gqx5UFUZjqtL3_8QhQ&s"
                                 alt=""
@@ -266,7 +282,7 @@ const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisib
                                     onClick={() => setLogoutContainer(false)}
                             >Vazgeç
                             </button>
-                            <button className="logoutContainer-logout">Çıkış Yap</button>
+                            <button className="logoutContainer-logout" onClick={handleLogout}>Çıkış Yap</button>
                         </div>
                     </div>
                 </div>)

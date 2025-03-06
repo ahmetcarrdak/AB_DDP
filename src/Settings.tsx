@@ -87,7 +87,7 @@ export const menus = [
     },
     {
         id: 2,
-        title: "Depo Yönetim",
+        title: "Üretim Yönetim",
         icon: icons.depo,
         action: "#",
         subMenu: [

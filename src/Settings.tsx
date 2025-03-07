@@ -19,6 +19,8 @@ export const apiUrl = {
     collectiveUpdatePerson: "Person/collective-update",
     importPersonExcel: "Person/import-from-excel",
     personCollectiveUpdate: "Person/collective-update",
+    deletePerson: "Person/delete",
+    updateTermination: "Person/termination",
 
     positions: "Positions",
 
@@ -57,6 +59,10 @@ export const apiUrl = {
     machineFault: "MachineFault",
 
     maintenanceRecord: "MaintenanceRecord",
+
+    authCompanyLogin: domain + "Auth/company/login",
+    authPersonLogin: domain + "Auth/person/login",
+    authCompanyRegister: domain + "Auth/register"
 };
 
 

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, Typography } from 'antd';
-import { UserOutlined, LockOutlined, IdcardOutlined } from '@ant-design/icons';
+import {UserOutlined, LockOutlined, IdcardOutlined, HomeOutlined, MailOutlined, PhoneOutlined} from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
+import {apiUrl} from "../Settings";
 
 const { Title } = Typography;
 
@@ -25,18 +26,19 @@ const AuthScreen: React.FC = () => {
 
   const onFinish = async (values: AuthFormData) => {
     setLoading(true);
+    console.log('Response:', values);
     try {
         let endpoint;
         if (isLogin) {
-            endpoint = isCompanyLogin ? 'http://localhost:5262/api/Auth/company/login' : '/api/auth/personnel/login';
+            endpoint = isCompanyLogin ? apiUrl.authCompanyLogin : apiUrl.authPersonLogin;
         } else {
-            endpoint = '/api/auth/company/register';
+            endpoint = apiUrl.authCompanyRegister;
         }
 
         const response = await axios.post(endpoint, values);
         if (response.data.token) {
             const userData = {
-                type: isCompanyLogin ? 'company' : 'personnel',
+                type: isCompanyLogin ? 'company' : 'personel',
                 ...response.data.user
             };
 
@@ -103,7 +105,7 @@ const AuthScreen: React.FC = () => {
     </Form>
   );
 
-  const PersonnelLoginForm = () => (
+  const PersonelLoginForm = () => (
     <Form
       name="personnel_login"
       className="auth-form"
@@ -145,6 +147,7 @@ const AuthScreen: React.FC = () => {
     </Form>
   );
 
+  // @ts-ignore
   const RegisterForm = () => (
     <Form
       name="register"
@@ -162,7 +165,7 @@ const AuthScreen: React.FC = () => {
         />
       </Form.Item>
       <Form.Item
-        name="taxNumber"
+        name="companyTaxNumber"
         rules={[{ required: true, message: 'Lütfen vergi numarasını girin!' }]}
       >
         <Input 
@@ -172,16 +175,42 @@ const AuthScreen: React.FC = () => {
         />
       </Form.Item>
       <Form.Item
-        name="email"
-        rules={[
-          { required: true, message: 'Lütfen email adresinizi girin!' },
-          { type: 'email', message: 'Geçerli bir email adresi girin!' }
-        ]}
+          name="companyPhone"
+          rules={[
+            { required: true, message: 'Lütfen telefon numarası girin!' },
+          ]}
       >
-        <Input 
-          prefix={<UserOutlined />} 
-          placeholder="Email"
-          size="large"
+        <Input
+            prefix={<PhoneOutlined />}
+            placeholder="Phone"
+            size="large"
+        />
+      </Form.Item>
+      <Form.Item
+          name="companyEmail"
+          rules={[
+            { required: true, message: 'Lütfen email adresinizi girin!' },
+            { type: 'email', message: 'Geçerli bir email adresi girin!' }
+          ]}
+      >
+        <Input
+            prefix={<MailOutlined />}
+            placeholder="Email"
+            size="large"
+        />
+      </Form.Item>
+      <Form.Item
+          name="companyAddress"
+          rules={[
+            { required: true, message: 'Lütfen adresinizi girin!' },
+          ]}
+      >
+        <Input.TextArea
+            //@ts-ignore
+            prefix={<HomeOutlined />}
+            placeholder="Address"
+            size="large"
+            rows={4} // İstediğiniz satır sayısını ayarlayabilirsiniz
         />
       </Form.Item>
       <Form.Item
@@ -262,7 +291,7 @@ const AuthScreen: React.FC = () => {
                 Personel Girişi
               </Button>
             </div>
-            {isCompanyLogin ? <CompanyLoginForm /> : <PersonnelLoginForm />}
+            {isCompanyLogin ? <CompanyLoginForm /> : <PersonelLoginForm />}
           </div>
         ) : (
           <RegisterForm />

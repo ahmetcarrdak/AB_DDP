@@ -39,6 +39,7 @@ import PersonDetail from "../Components/TableDetailComponent/PersonDetail";
 import * as XLSX from 'xlsx';
 import type { ColumnsType } from 'antd/es/table';
 import apiClient from "../Utils/ApiClient";
+import personDetail from "../Components/TableDetailComponent/PersonDetail";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -736,7 +737,7 @@ const PersonScreen: React.FC<PersonScreenProps> = ({ onToggleMenu }) => {
             >
                 {selectedRecord && (
                     // @ts-ignore
-                    <PersonDetail data={selectedRecord} />
+                    <PersonDetail id={selectedRecord.id} />
                 )}
             </Drawer>
 

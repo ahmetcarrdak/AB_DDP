@@ -78,6 +78,7 @@ const icons = {
     makineYönetim: <FaCogs className="menu-item-icon"/>,
     bakımKayit: <FaTools className="menu-item-icon"/>,
 };
+/*
 export const menus = [
     {
         id: 1,
@@ -125,7 +126,45 @@ export const menus = [
         ],
     },
 ];
+*/
 
+export const menus = [
+    {
+        id: 1,
+        title: "Panel",
+        icon: icons.dashboard,
+        action: "/",
+    },
+    {
+        id: 2,
+        title: "Üretim Kontrol",
+        icon: icons.işYönetim,
+        action: "/",
+    },
+    {
+        id: 5,
+        title: "Üretim Talimatı",
+        icon: icons.işYönetim,
+        action: "/production-add",
+    },
+    {
+        id: 2,
+        title: "Üretim Durumları",
+        icon: icons.siparişYönetim,
+        action: "/",
+    },
+    {
+        id: 4,
+        title: "Makine Yönetim",
+        icon: icons.makineYönetim,
+        action: "#",
+        subMenu: [
+            {id: 4.1, title: "Makineleri yönet", action: "/machine"},
+            {id: 4.2, title: "Arızaları Yönet", action: "/machine-fault"},
+            {id: 4.3, title: "Bakım Kayıtları", action: "/maintenance-record"},
+        ],
+    },
+]
 export const searchs = [
     {
         id: 1,

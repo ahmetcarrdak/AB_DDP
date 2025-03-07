@@ -56,7 +56,11 @@ const MachineFaultAddScreen = React.lazy(
 
 const MachineCreateScreen = React.lazy(
     () => import("./Screens/Create/MaintenanceCreateScreen")
-)
+);
+
+const ProductionInstructionInsert = React.lazy(
+    () => import("./Screens/Create/productionInstructionInsert")
+);
 
 // Lazy load Update Screens
 const MaterialUpdateById = React.lazy(
@@ -341,6 +345,16 @@ function AppContent() {
                             element={
                                 <ProtectedRoute>
                                     <MaintenanceCreateScreen/>
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        {/* Production */}
+                        <Route
+                            path="/production-add"
+                            element={
+                                <ProtectedRoute>
+                                    <ProductionInstructionInsert/>
                                 </ProtectedRoute>
                             }
                         />

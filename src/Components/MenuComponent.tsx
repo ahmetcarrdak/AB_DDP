@@ -23,7 +23,7 @@ import {
 import {IoPersonOutline, IoSettings} from "react-icons/io5";
 
 // React Icons - Md (Material Design)
-import {MdEmojiEmotions, MdKeyboardCommandKey} from "react-icons/md";
+import {MdEmojiEmotions, MdKeyboardCommandKey, MdManageSearch} from "react-icons/md";
 
 // React Icons - Ri (Remix Icon)
 import {RiLogoutCircleRLine} from "react-icons/ri";
@@ -35,6 +35,8 @@ import {RxDashboard} from "react-icons/rx";
 import {menus} from "../Settings";
 
 import logo from "./../Images/logo.webp";
+import {PiTrendUpThin} from "react-icons/pi";
+import {BiChip} from "react-icons/bi";
 
 interface MenuComponentProps {
     onMenuClick: () => void;
@@ -148,18 +150,18 @@ const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisib
                     </Link>
 
                     <Link to={"/store"} className="menu-widget">
-                        <FiDatabase className="menu-widget-icon"/>
-                        <span className="menu-widget-badge">Depo</span>
+                        <PiTrendUpThin className="menu-widget-icon"/>
+                        <span className="menu-widget-badge">Durumlar</span>
                     </Link>
 
                     <Link to={"/order"} className="menu-widget">
-                        <FaNetworkWired className="menu-widget-icon"/>
-                        <span className="menu-widget-badge">Siparişler</span>
+                        <MdManageSearch className="menu-widget-icon"/>
+                        <span className="menu-widget-badge">Talimatlar</span>
                     </Link>
 
                     <Link to={"/person"} className="menu-widget">
-                        <IoPersonOutline className="menu-widget-icon"/>
-                        <span className="menu-widget-badge">Personeller</span>
+                        <BiChip className="menu-widget-icon"/>
+                        <span className="menu-widget-badge">Makineler</span>
                     </Link>
                 </div>
 

@@ -1,11 +1,14 @@
-import React, {Suspense, useState} from "react";
-import {Route, Routes, useLocation, Navigate} from "react-router-dom";
+import React, {Suspense, useEffect, useState} from "react";
+import {Route, Routes, useLocation, Navigate, useNavigate} from "react-router-dom";
+import axios from 'axios';
 import "react-toastify/dist/ReactToastify.css";
 import {AuthProvider, useAuth} from "./context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import "react-toastify/dist/ReactToastify.css";
 import DataUpdateComponent from "./DataUpdateComponent";
 import MaintenanceCreateScreen from "./Screens/Create/MaintenanceCreateScreen";
+import apiClient from "./Utils/ApiClient";
+import {apiUrl} from "./Settings";
 
 // Lazy load all screens
 const HomeScreen = React.lazy(() => import("./Screens/HomeScreen"));
@@ -29,8 +32,8 @@ const MaintenanceRecord = React.lazy(
 );
 const AuthScreen = React.lazy(() => import("./Screens/AuthScreen"));
 const QRScreen = React.lazy(() => import("./Screens/QRScreen"));
-
-
+const ProductionInstructionList = React.lazy(() => import("./Screens/ProductionInstructionSystem"))
+const ProductionMachineTracker = React.lazy(() => import("./Screens/ProductionMachineTracker"))
 // Lazy load Create Screens
 const MaterialAddScreen = React.lazy(
     () => import("./Screens/Create/MaterialAddScreen")
@@ -101,9 +104,12 @@ const LoadingSpinner = () => (
 );
 
 function AppContent() {
+    const navigate = useNavigate();
     const location = useLocation();
     const hideMenuRoutes = ["/auth", "/login", "/register", "/not-found", "/QR-Menu"];
     const showMenu = !hideMenuRoutes.includes(location.pathname);
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState<boolean>(true);
     const {isAuthenticated} = useAuth(); // Auth context'inden oturum durumunu al
 
     const [isMenuVisible, setIsMenuVisible] = useState(window.innerWidth > 768);
@@ -116,6 +122,29 @@ function AppContent() {
     const handleTabChange = (tabId: number) => {
         setActiveTab(tabId);
     };
+
+    useEffect(() => {
+        // API isteği yapılacak
+        const fetchData = async () => {
+            try {
+                const response = await apiClient.get(apiUrl.machine);
+                setData(response.data);
+            } catch (error: any) {
+                if (error.response && error.response.status === 401) {
+                    // Eğer auth hatası alırsak, kullanıcıyı /auth sayfasına yönlendir
+                    console.log('Auth error, redirecting to /auth');
+                    navigate('/auth', { replace: true });
+                } else {
+                    // Diğer hatalar için isterseniz başka işlemler yapabilirsiniz
+                    console.error(error);
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [navigate]);
 
     return (
         <div className="App">
@@ -358,6 +387,24 @@ function AppContent() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route
+                            path="/production-instructions"
+                            element={
+                                <ProtectedRoute>
+                                    <ProductionInstructionList/>
+                                </ProtectedRoute>
+                            }
+                            />
+
+                        <Route
+                            path="/production-tracker"
+                            element={
+                                <ProtectedRoute>
+                                    <ProductionMachineTracker/>
+                                </ProtectedRoute>
+                            }
+                        />
+
 
                         {/* Redirect to auth if not found */}
                         <Route path="*" element={<Navigate to="/auth" replace/>}/>

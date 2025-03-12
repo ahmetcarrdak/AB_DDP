@@ -62,7 +62,13 @@ export const apiUrl = {
 
     authCompanyLogin: domain + "Auth/company/login",
     authPersonLogin: domain + "Auth/person/login",
-    authCompanyRegister: domain + "Auth/register"
+    authCompanyRegister: domain + "Auth/register",
+
+    ProductionIns: "ProductionInstruction/create",
+    ProductionInsList: "ProductionInstruction/company-instructions",
+    ProductionInsDetail: "ProductionInstruction/detail",
+    ProductionInsUpdate: "ProductionInstruction/update",
+    ProductionInsDelete: "ProductionInstruction/delete",
 };
 
 
@@ -137,31 +143,24 @@ export const menus = [
     },
     {
         id: 2,
-        title: "Üretim Kontrol",
-        icon: icons.işYönetim,
-        action: "/",
-    },
-    {
-        id: 5,
-        title: "Üretim Talimatı",
-        icon: icons.işYönetim,
-        action: "/production-add",
-    },
-    {
-        id: 2,
-        title: "Üretim Durumları",
+        title: "Üretim Yönetim",
         icon: icons.siparişYönetim,
-        action: "/",
+        action: "#",
+        subMenu: [
+            {id: 2.1, title: "Üretim Talimatları", action: "/production-instructions"},
+            {id: 2.2, title: "Yeni Üretim Talimatı", action: "/production-add"},
+            {id: 2.3,  title: "Üretim Durumları", action: "/production-tracker"},
+        ],
     },
     {
-        id: 4,
+        id: 3,
         title: "Makine Yönetim",
         icon: icons.makineYönetim,
         action: "#",
         subMenu: [
-            {id: 4.1, title: "Makineleri yönet", action: "/machine"},
-            {id: 4.2, title: "Arızaları Yönet", action: "/machine-fault"},
-            {id: 4.3, title: "Bakım Kayıtları", action: "/maintenance-record"},
+            {id: 3.1, title: "Makineleri yönet", action: "/machine"},
+            {id: 3.2, title: "Arızaları Yönet", action: "/machine-fault"},
+            {id: 3.3, title: "Bakım Kayıtları", action: "/maintenance-record"},
         ],
     },
 ]

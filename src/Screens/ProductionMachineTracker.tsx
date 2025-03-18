@@ -88,7 +88,11 @@ interface ProductionInstruction {
     productionStores: ProductionStore[];
 }
 
-const ProductionMachineTracker: React.FC = () => {
+interface ProdutionInstructionProps {
+    onToggleMenu: () => void;
+}
+
+const ProductionMachineTracker: React.FC<ProdutionInstructionProps> = ({onToggleMenu}) => {
     // State tanımlamaları
     const [machines, setMachines] = useState<Machine[]>([]);
     const [productions, setProductions] = useState<ProductionInstruction[]>([]);
@@ -232,11 +236,19 @@ const ProductionMachineTracker: React.FC = () => {
                                 title: 'Durum',
                                 dataIndex: 'isComplated',
                                 key: 'isComplated',
-                                render: (isComplated) => (
-                                    isComplated === 1 ?
-                                        <Tag color="green">Tamamlandı</Tag> :
-                                        <Tag color="blue">Devam Ediyor</Tag>
-                                )
+                                render: (_, record) => {
+                                    if (record.isComplated === 1) {
+                                        return <Tag color="green">Tamamlandı</Tag>;
+                                    }
+                                    if (record.isDeleted === 1) {
+                                        return <Tag color="red">İptal Edildi</Tag>;
+                                    }
+                                    if (!record.machineId || record.machineId <= 0) {
+                                        return <Tag color="red">Henüz Başlanmadı</Tag>;
+                                    }
+
+                                    return <Tag color="blue">Devam Ediyor</Tag>;
+                                }
                             },
                             {
                                 title: 'Oluşturulma',
@@ -273,6 +285,8 @@ const ProductionMachineTracker: React.FC = () => {
                             <Tag color="green">Tamamlandı</Tag>
                         ) : production.isDeleted === 1 ? (
                             <Tag color="red">İptal Edildi</Tag>
+                        ) : !production.machineId || production.machineId === 0 ? (
+                            <Tag color="red">Henüz Başlanmadı</Tag>
                         ) : (
                             <Tag color="blue">Devam Ediyor</Tag>
                         )}
@@ -387,7 +401,7 @@ const ProductionMachineTracker: React.FC = () => {
 
     return (
         <>
-            <HeaderComponent/>
+            <HeaderComponent onToggleMenu={onToggleMenu}/>
             <Layout style={{minHeight: '100vh', marginTop: 40}}>
                 <Header style={{background: '#fff', padding: '0 20px', boxShadow: '0 1px 4px rgba(0,21,41,.08)'}}>
                     <div style={{
@@ -525,11 +539,13 @@ const ProductionMachineTracker: React.FC = () => {
                                     title={production.title}
                                     extra={
                                         production.isComplated === 1 ? (
-                                            <Tag color="green" icon={<CheckCircleOutlined/>}>Tamamlandı</Tag>
+                                            <Tag color="green">Tamamlandı</Tag>
                                         ) : production.isDeleted === 1 ? (
-                                            <Tag color="red" icon={<CloseCircleOutlined/>}>İptal</Tag>
+                                            <Tag color="red">İptal Edildi</Tag>
+                                        ) : !production.machineId || production.machineId === 0 ? (
+                                            <Tag color="red">Henüz Başlanmadı</Tag>
                                         ) : (
-                                            <Tag color="blue" icon={<ClockCircleOutlined/>}>Devam Ediyor</Tag>
+                                            <Tag color="blue">Devam Ediyor</Tag>
                                         )
                                     }
                                     hoverable

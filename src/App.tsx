@@ -162,7 +162,7 @@ function AppContent() {
                         {/* Auth Routes - Oturum gerektirmeyen rotalar */}
                         <Route path="/auth" element={<AuthScreen/>}/>
                         <Route path="/not-found" element={<NotFoundScreen/>}/>
-                        <Route path="/QR-Menu" element={<QRScreen/>}/>
+                        <Route path="/QR-Menu/:id" element={<QRScreen/>}/>
 
                         {/* Protected Routes - Oturum gerektiren rotalar */}
                         <Route
@@ -321,7 +321,7 @@ function AppContent() {
                             path="/machine"
                             element={
                                 <ProtectedRoute>
-                                    <MachineScreen/>
+                                    <MachineScreen onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />
@@ -329,7 +329,7 @@ function AppContent() {
                             path="/machine-create"
                             element={
                                 <ProtectedRoute>
-                                    <MachineAddScreen/>
+                                    <MachineAddScreen onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />
@@ -337,7 +337,7 @@ function AppContent() {
                             path="/machine-update-machine/:id"
                             element={
                                 <ProtectedRoute>
-                                    <MachineUpdateById/>
+                                    <MachineUpdateById onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />
@@ -347,7 +347,7 @@ function AppContent() {
                             path="/machine-fault"
                             element={
                                 <ProtectedRoute>
-                                    <MachineFaultScreen/>
+                                    <MachineFaultScreen onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />
@@ -355,7 +355,7 @@ function AppContent() {
                             path="/machine-fault-create"
                             element={
                                 <ProtectedRoute>
-                                    <MachineFaultAddScreen/>
+                                    <MachineFaultAddScreen onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />
@@ -365,7 +365,7 @@ function AppContent() {
                             path="/maintenance-record"
                             element={
                                 <ProtectedRoute>
-                                    <MaintenanceRecord/>
+                                    <MaintenanceRecord onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />
@@ -383,7 +383,7 @@ function AppContent() {
                             path="/production-add"
                             element={
                                 <ProtectedRoute>
-                                    <ProductionInstructionInsert/>
+                                    <ProductionInstructionInsert onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />
@@ -391,7 +391,7 @@ function AppContent() {
                             path="/production-instructions"
                             element={
                                 <ProtectedRoute>
-                                    <ProductionInstructionList/>
+                                    <ProductionInstructionList onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                             />
@@ -400,7 +400,7 @@ function AppContent() {
                             path="/production-tracker"
                             element={
                                 <ProtectedRoute>
-                                    <ProductionMachineTracker/>
+                                    <ProductionMachineTracker onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
                         />

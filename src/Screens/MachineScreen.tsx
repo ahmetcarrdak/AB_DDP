@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useState} from "react";
+import React, {memo, useEffect, useState, useRef} from "react";
 import axios from "axios";
 import {Link} from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
@@ -18,14 +18,14 @@ import {
     Col,
     Select,
     DatePicker,
-    Switch
+    Switch, Modal, QRCode
 } from "antd";
 import {
     DownloadOutlined,
     PlusOutlined,
     FilterOutlined,
     TableOutlined,
-    UnorderedListOutlined,
+    UnorderedListOutlined, QrcodeOutlined,
 } from "@ant-design/icons";
 import {apiUrl} from "../Settings";
 import type {ColumnsType} from "antd/es/table";
@@ -55,18 +55,26 @@ interface Filters {
     dateRange: [Dayjs | null, Dayjs | null] | null;
 }
 
-const MachineScreen = memo(() => {
+interface MachineScreenProps {
+    onToggleMenu: () => void;
+}
+
+const MachineScreen:React.FC<MachineScreenProps> = ({onToggleMenu}) => {
     const [data, setData] = useState<MachineRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
     const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
     const [viewMode, setViewMode] = useState<"table" | "card">("table");
+    const [qrModalVisible, setQrModalVisible] = useState(false);
+    const [qrUrl, setQrUrl] = useState("");
+    const [selectedFormat, setSelectedFormat] = useState<string>("png");
     const [filters, setFilters] = useState<Filters>({
         location: "",
         manufacturer: "",
         isOperational: null,
         dateRange: null,
     });
+    const qrRef = useRef<any>(null);
 
     useEffect(() => {
         let isMounted = true; // Component'in mount durumunu takip et
@@ -89,6 +97,35 @@ const MachineScreen = memo(() => {
             isMounted = false; // Component unmount olduğunda istek iptal edilir
         };
     }, []);
+
+    const generateQRCode = (machineId: number) => {
+        const link = `https://senindomainin.com/machine-detail/${machineId}`;
+        setQrUrl(link);
+        setQrModalVisible(true);
+    };
+
+    const downloadQRCode = () => {
+        // Ant Design QRCode bileşeni için indirme işlemi
+        const canvas = document.querySelector('.ant-qrcode canvas') as HTMLCanvasElement;
+        if (!canvas) {
+            message.error("QR kodu indirilemedi!");
+            return;
+        }
+
+        try {
+            const imageURL = canvas.toDataURL(`image/${selectedFormat}`);
+            const link = document.createElement("a");
+            link.href = imageURL;
+            link.download = `machine-qr-code.${selectedFormat}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            message.success("QR kodu indirildi");
+        } catch (error) {
+            message.error("QR kodu indirilirken bir hata oluştu");
+            console.error("Error downloading QR code:", error);
+        }
+    };
 
     const columns: ColumnsType<MachineRecord> = [
         {
@@ -156,6 +193,13 @@ const MachineScreen = memo(() => {
                     <Link to={`/machine-update-machine/${record.machineId}`}>
                         <Button type="link">Düzenle</Button>
                     </Link>
+                    <Button
+                        type="primary"
+                        icon={<QrcodeOutlined />}
+                        onClick={() => generateQRCode(record.machineId)}
+                    >
+                        QR Kodu
+                    </Button>
                 </Space>
             ),
             width: "10%",
@@ -185,7 +229,7 @@ const MachineScreen = memo(() => {
 
     return (
         <div>
-            <HeaderComponent/>
+            <HeaderComponent onToggleMenu={onToggleMenu}/>
             <Card>
                 <Row gutter={[16, 16]} justify="space-between" align="middle">
                     <Col xs={24} sm={12} md={8} lg={6}>
@@ -293,8 +337,43 @@ const MachineScreen = memo(() => {
                     </Form>
                 </Drawer>
             </Card>
+            <Modal
+                title="Makine QR Kodu"
+                open={qrModalVisible}
+                onCancel={() => setQrModalVisible(false)}
+                footer={[
+                    <Button key="download" type="primary" onClick={downloadQRCode}>
+                        QR Kodu İndir
+                    </Button>,
+                    <Button key="close" onClick={() => setQrModalVisible(false)}>
+                        Kapat
+                    </Button>,
+                ]}
+            >
+                {qrUrl && (
+                    <div style={{ textAlign: "center" }}>
+                        <QRCode
+                            value={qrUrl}
+                            size={200}
+                            className="qr-code-element"
+                            type={selectedFormat === "png" ? "canvas" : "svg"}
+                        />
+                        <p>{qrUrl}</p>
+                        <Form.Item label="Format">
+                            <Select
+                                value={selectedFormat}
+                                onChange={(value) => setSelectedFormat(value)}
+                                style={{ width: 120 }}
+                            >
+                                <Option value="png">PNG</Option>
+                                <Option value="jpeg">JPEG</Option>
+                            </Select>
+                        </Form.Item>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
-});
+};
 
 export default MachineScreen;

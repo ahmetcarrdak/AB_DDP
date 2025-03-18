@@ -75,8 +75,12 @@ interface ProductionInstruction {
     productionStores: Store[];
 }
 
+interface ProdutionInstructionProps {
+    onToggleMenu: () => void;
+}
+
 // Ana bileşen
-const ProductionInstructionSystem: React.FC = () => {
+const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onToggleMenu}) => {
     // State tanımlamaları
     const [data, setData] = useState<ProductionInstruction[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -170,6 +174,12 @@ const ProductionInstructionSystem: React.FC = () => {
             sorter: (a, b) => a.title.localeCompare(b.title),
         },
         {
+            title: 'Barkod',
+            dataIndex: 'barcode',
+            key: 'barcode',
+            ellipsis: true,
+        },
+        {
             title: 'Açıklama',
             dataIndex: 'description',
             key: 'description',
@@ -227,7 +237,9 @@ const ProductionInstructionSystem: React.FC = () => {
 
     return (
         <>
-            <HeaderComponent/>
+            <HeaderComponent
+                onToggleMenu={onToggleMenu}
+            />
             <div style={{padding: '20px'}}>
                 <Card>
                     <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 16}}>

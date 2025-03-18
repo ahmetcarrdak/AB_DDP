@@ -11,12 +11,11 @@ import {
   Select,
   Switch,
 } from "antd";
-import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { apiUrl } from "../../Settings";
-import dayjs from "dayjs";
 import apiClient from "../../Utils/ApiClient";
+import HeaderComponent from "../../Components/HeaderComponent";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -24,7 +23,11 @@ const { Option } = Select;
 
 const faultSeverities = ["Düşük", "Orta", "Yüksek", "Kritik"];
 
-const MachineFaultAddScreen = memo(() => {
+interface MachineScreenProps {
+  onToggleMenu: () => void;
+}
+
+const MachineFaultAddScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) => {
   const [form] = Form.useForm();
   const [machines, setMachines] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,6 +83,7 @@ const MachineFaultAddScreen = memo(() => {
   return (
     <div style={{ padding: "20px" }}>
       <ToastContainer />
+      <HeaderComponent onToggleMenu={onToggleMenu} />
       <Title level={2}>Yeni Makine Arızası Ekle</Title>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>

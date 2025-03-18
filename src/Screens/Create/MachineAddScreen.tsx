@@ -9,9 +9,7 @@ import {
     Col,
     Typography,
     Switch,
-    InputNumber,
 } from "antd";
-import axios from "axios";
 import {apiUrl} from "../../Settings";
 import {toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -34,7 +32,11 @@ const manufacturers = [
     "Diğer",
 ];
 
-const MachineAddScreen = memo(() => {
+interface MachineScreenProps {
+    onToggleMenu:() => void;
+}
+
+const MachineAddScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) => {
     const [form] = Form.useForm();
 
     const onFinish = async (values: any) => {
@@ -68,7 +70,7 @@ const MachineAddScreen = memo(() => {
 
     return (
         <>
-            <HeaderComponent/>
+            <HeaderComponent onToggleMenu={onToggleMenu}/>
             <div style={{padding: "20px"}}>
                 <ToastContainer/>
                 <Title level={2}>Yeni Makine Ekle</Title>

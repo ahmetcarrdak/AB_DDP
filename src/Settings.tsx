@@ -57,6 +57,7 @@ export const apiUrl = {
     machineFault5: "MachineFault/TotalFault5",
     machineLatestFault: "MachineFault/latest-faults",
     machineFault: "MachineFault",
+    machineById: (id: string) => `Machine/${id}`,
 
     maintenanceRecord: "MaintenanceRecord",
 
@@ -147,8 +148,8 @@ export const menus = [
         icon: icons.siparişYönetim,
         action: "#",
         subMenu: [
-            {id: 2.1, title: "Üretim Talimatları", action: "/production-instructions"},
             {id: 2.2, title: "Yeni Üretim Talimatı", action: "/production-add"},
+            {id: 2.1, title: "Üretim Talimatları", action: "/production-instructions"},
             {id: 2.3,  title: "Üretim Durumları", action: "/production-tracker"},
         ],
     },

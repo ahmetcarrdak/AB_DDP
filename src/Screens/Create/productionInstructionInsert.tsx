@@ -32,7 +32,12 @@ interface ProductionInstruction {
     productionStores: ProductionStore[];
 }
 
-const ProductionInstructionInsert: React.FC = () => {
+interface ProdutionInstructionProps {
+    onToggleMenu: () => void;
+}
+
+
+const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({onToggleMenu}) => {
     const [form] = Form.useForm();
     const [machines, setMachines] = useState<Machine[]>([]);
     const [productionToMachines, setProductionToMachines] = useState<ProductionToMachine[]>([]);
@@ -129,7 +134,7 @@ const ProductionInstructionInsert: React.FC = () => {
 
     return (
         <>
-            <HeaderComponent/>
+            <HeaderComponent onToggleMenu={onToggleMenu}/>
             <ToastContainer/>
             <div style={{marginTop: 20}}></div>
             <Form

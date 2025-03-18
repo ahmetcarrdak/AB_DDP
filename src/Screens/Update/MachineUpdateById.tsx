@@ -12,17 +12,21 @@ import {
   Spin,
   InputNumber,
 } from "antd";
-import axios from "axios";
 import dayjs from "dayjs";
 import { apiUrl } from "../../Settings";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
 import apiClient from "../../Utils/ApiClient";
+import HeaderComponent from "../../Components/HeaderComponent";
 
 const { Title } = Typography;
 
-const MachineUpdateById = () => {
+interface MaciheScreenProps {
+  onToggleMenu: () => void;
+}
+
+const MachineUpdateById:React.FC<MaciheScreenProps>  = ({onToggleMenu}) => {
   const { id } = useParams<{ id: string }>();
   const [form] = Form.useForm();
   const [isLoadingMachine, setIsLoadingMachine] = useState(false);
@@ -97,6 +101,7 @@ const MachineUpdateById = () => {
   return (
     <div style={{ padding: "20px" }}>
       <ToastContainer />
+      <HeaderComponent onToggleMenu={onToggleMenu}/>
       <Title level={2}>Makine Bilgileri Düzenle</Title>
       <Spin spinning={isLoadingMachine} tip="Makine bilgileri yükleniyor...">
         <Card>

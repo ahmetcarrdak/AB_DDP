@@ -35,17 +35,15 @@ const MachineUpdateById:React.FC<MaciheScreenProps>  = ({onToggleMenu}) => {
   const fetchMachineDetails = async () => {
     if (!id) return;
 
-    setIsLoadingMachine(true); // Yükleme başladığını belirtiyoruz
+    setIsLoadingMachine(true);
     try {
-      const response = await apiClient.get(`${apiUrl.machine}/${id}`);  // axios yerine apiClient
+      const url = apiUrl.machineById(id);
+      const response = await apiClient.get(url);
       const data = response.data;
 
       // Verileri düzenleyerek form alanlarına atıyoruz
       const updatedData = {
         ...data,
-        purchaseDate: data.purchaseDate ? dayjs(data.purchaseDate) : null,
-        createdAt: data.createdAt ? dayjs(data.createdAt) : null,
-        updatedAt: data.updatedAt ? dayjs(data.updatedAt) : null,
       };
 
       form.setFieldsValue(updatedData); // Form alanlarını güncelliyoruz
@@ -72,13 +70,10 @@ const MachineUpdateById:React.FC<MaciheScreenProps>  = ({onToggleMenu}) => {
       // Tarihleri uygun formata dönüştürüp düzenliyoruz
       const formattedValues = {
         ...values,
-        purchaseDate: values.purchaseDate ? values.purchaseDate.toISOString() : null,
-        createdAt: values.createdAt ? values.createdAt.toISOString() : null,
-        updatedAt: values.updatedAt ? values.updatedAt.toISOString() : null,
       };
-
+      console.log(formattedValues);
       // Makineyi güncelliyoruz
-      await apiClient.put(`${apiUrl.machine}/${id}`, formattedValues);  // axios yerine apiClient
+      await apiClient.put(`${apiUrl.machine}`, formattedValues);
       toast.success("Makine başarıyla güncellendi", {
         position: "bottom-right",
         autoClose: 3000,
@@ -122,12 +117,18 @@ const MachineUpdateById:React.FC<MaciheScreenProps>  = ({onToggleMenu}) => {
               </Col>
               <Col xs={24} sm={12} md={8}>
                 <Form.Item
-                  name="code"
+                  name="serialNumber"
                   label="Makine Kodu"
                   rules={[
                     { required: true, message: "Lütfen makine kodunu giriniz" },
                   ]}
                 >
+                  <Input />
+                </Form.Item>
+                <Form.Item name="id" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="companyId" hidden>
                   <Input />
                 </Form.Item>
               </Col>
@@ -160,40 +161,6 @@ const MachineUpdateById:React.FC<MaciheScreenProps>  = ({onToggleMenu}) => {
                   rules={[{ required: true, message: "Lütfen modeli giriniz" }]}
                 >
                   <Input />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item
-                  name="totalFault"
-                  label="Toplam Arıza Sayısı"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Lütfen toplam arıza sayısını giriniz",
-                    },
-                  ]}
-                >
-                  <InputNumber style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            {/* Tarih Bilgileri */}
-            <SectionTitle title="Tarih Bilgileri" />
-            <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="purchaseDate" label="Satın Alma Tarihi">
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="createdAt" label="Oluşturulma Tarihi">
-                  <DatePicker style={{ width: "100%" }} disabled />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8}>
-                <Form.Item name="updatedAt" label="Güncelleme Tarihi">
-                  <DatePicker style={{ width: "100%" }} disabled />
                 </Form.Item>
               </Col>
             </Row>

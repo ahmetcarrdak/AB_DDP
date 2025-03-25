@@ -89,11 +89,8 @@ interface ProductionInstruction {
     productionStores: ProductionStore[];
 }
 
-interface ProdutionInstructionProps {
-    onToggleMenu: () => void;
-}
 
-const ProductionMachineTracker: React.FC<ProdutionInstructionProps> = ({onToggleMenu}) => {
+const ProductionStatus: React.FC = () => {
     // State tanımlamaları
     const [machines, setMachines] = useState<Machine[]>([]);
     const [productions, setProductions] = useState<ProductionInstruction[]>([]);
@@ -402,7 +399,6 @@ const ProductionMachineTracker: React.FC<ProdutionInstructionProps> = ({onToggle
 
     return (
         <>
-            <HeaderComponent onToggleMenu={onToggleMenu}/>
             <Layout style={{minHeight: '100vh', marginTop: 40}}>
                 <Header style={{background: '#fff', padding: '0 20px', boxShadow: '0 1px 4px rgba(0,21,41,.08)'}}>
                     <div style={{
@@ -637,4 +633,4 @@ const ProductionMachineTracker: React.FC<ProdutionInstructionProps> = ({onToggle
     );
 };
 
-export default ProductionMachineTracker;
+export default ProductionStatus;

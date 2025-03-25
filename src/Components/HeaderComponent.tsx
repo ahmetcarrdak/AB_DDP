@@ -82,7 +82,7 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
                         />
 
                         {activeDotsModal && (
-                            <div className={"header-dots-active-modal"}>
+                            <div className={"header-dots-active-modal"} style={{display:"none"}}>
                                 <div className="header-dots-active-modal-item">
                                     <span className="icon"><IoChatbubblesOutline/></span>
                                     <span>Panel tasarımcısı ile iletişim</span>
@@ -99,7 +99,7 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="header-body-right">
+                <div className="header-body-right" style={{display: "none"}}>
                     <div className="header-input-container">
                         <IoIosSearch/>
                         <input

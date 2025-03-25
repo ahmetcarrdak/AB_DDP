@@ -6,13 +6,14 @@ import {
 import type {ColumnsType} from 'antd/es/table';
 import {
     SearchOutlined, DownloadOutlined,
-    ReloadOutlined, EyeOutlined
+    ReloadOutlined, EyeOutlined, PlusOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import apiClient from "../Utils/ApiClient";
 import {apiUrl} from "../Settings";
 import HeaderComponent from "../Components/HeaderComponent";
+import {Link} from "react-router-dom";
 
 const {TabPane} = Tabs;
 const {Title, Text} = Typography;
@@ -80,7 +81,7 @@ interface ProdutionInstructionProps {
 }
 
 // Ana bileşen
-const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onToggleMenu}) => {
+const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onToggleMenu}) => {
     // State tanımlamaları
     const [data, setData] = useState<ProductionInstruction[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -270,6 +271,14 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                             >
                                 Yenile
                             </Button>
+                            <Link to={"/production-add"}>
+                                <Button
+                                    type="link"
+                                    icon={<PlusOutlined/>}
+                                >
+                                    Yeni Üretim Talimatı Ekle
+                                </Button>
+                            </Link>
                         </Space>
                     </div>
 
@@ -361,10 +370,13 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                                                             <Descriptions column={1} bordered>
                                                                 <Descriptions.Item
                                                                     label="İşlem Sırası">{item.line}</Descriptions.Item>
-                                                                <Descriptions.Item
-                                                                    label="Giriş Tarihi">{formatDate(item.entryDate)}</Descriptions.Item>
-                                                                <Descriptions.Item
-                                                                    label="Çıkış Tarihi">{formatDate(item.exitDate)}</Descriptions.Item>
+                                                                {item.status > 0 && (<Descriptions.Item
+                                                                        label="Giriş Tarihi">{formatDate(item.entryDate)}</Descriptions.Item>
+                                                                )}
+                                                                {item.exitDate !== item.entryDate && (
+                                                                    <Descriptions.Item
+                                                                        label="Çıkış Tarihi">{formatDate(item.exitDate)}</Descriptions.Item>
+                                                                )}
                                                             </Descriptions>
                                                         </Card>
                                                     </List.Item>

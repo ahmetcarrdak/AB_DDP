@@ -148,7 +148,6 @@ export const menus = [
         icon: icons.siparişYönetim,
         action: "#",
         subMenu: [
-            {id: 2.2, title: "Yeni Üretim Talimatı", action: "/production-add"},
             {id: 2.1, title: "Üretim Talimatları", action: "/production-instructions"},
             {id: 2.3,  title: "Üretim Durumları", action: "/production-tracker"},
         ],
@@ -161,7 +160,6 @@ export const menus = [
         subMenu: [
             {id: 3.1, title: "Makineleri yönet", action: "/machine"},
             {id: 3.2, title: "Arızaları Yönet", action: "/machine-fault"},
-            {id: 3.3, title: "Bakım Kayıtları", action: "/maintenance-record"},
         ],
     },
 ]
@@ -217,10 +215,6 @@ export const navMenus = [
     },
     {
         id: 2,
-        title: "Sipariş Durumları",
-    },
-    {
-        id: 3,
-        title: "Yarı Mamül Durumları",
+        title: "Üretim Durumları",
     },
 ];

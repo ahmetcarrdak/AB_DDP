@@ -1,7 +1,7 @@
-import React, {useState, useEffect} from 'react';
-import {Form, Input, Button, Select, message, Row, Col} from 'antd';
-import {MdDeleteForever} from "react-icons/md";
-import {apiUrl} from "../../Settings";
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, Select, message, Row, Col, Card } from 'antd';
+import { MdDeleteForever } from "react-icons/md";
+import { apiUrl } from "../../Settings";
 import HeaderComponent from "../../Components/HeaderComponent";
 import type { Dayjs } from 'dayjs';
 import apiClient from "../../Utils/ApiClient";
@@ -30,21 +30,22 @@ interface ProductionInstruction {
     description: string;
     productionToMachines: ProductionToMachine[];
     productionStores: ProductionStore[];
+    barcode?: string;
 }
 
 interface ProdutionInstructionProps {
     onToggleMenu: () => void;
 }
 
-
-const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({onToggleMenu}) => {
+const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({ onToggleMenu }) => {
     const [form] = Form.useForm();
     const [machines, setMachines] = useState<Machine[]>([]);
     const [productionToMachines, setProductionToMachines] = useState<ProductionToMachine[]>([]);
     const [productionStores, setProductionStores] = useState<ProductionStore[]>([]);
+    const [barcode, setBarcode] = useState<string>('');
+    const [isBarcodeDisabled, setIsBarcodeDisabled] = useState<boolean>(false);
 
     useEffect(() => {
-        // Fetch machines from API
         const fetchMachines = async () => {
             try {
                 const response = await apiClient.get(apiUrl.machine);
@@ -55,6 +56,22 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({onTog
         };
         fetchMachines();
     }, []);
+
+    const generateBarcode = () => {
+        const newBarcode = `BC-${Math.floor(100000 + Math.random() * 900000)}`;
+        setBarcode(newBarcode);
+        setIsBarcodeDisabled(true);
+    };
+
+    const refreshBarcode = () => {
+        const newBarcode = `BC-${Math.floor(100000 + Math.random() * 900000)}`;
+        setBarcode(newBarcode);
+    };
+
+    const cancelBarcode = () => {
+        setBarcode('');
+        setIsBarcodeDisabled(false);
+    };
 
     const handleAddMachine = () => {
         setProductionToMachines([
@@ -82,7 +99,6 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({onTog
 
     const handleRemoveMachine = (index: number) => {
         const newMachines = productionToMachines.filter((_, idx) => idx !== index);
-        // Reorder line numbers
         const reorderedMachines = newMachines.map((machine, idx) => ({
             ...machine,
             line: idx + 1
@@ -90,11 +106,10 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({onTog
         setProductionToMachines(reorderedMachines);
     };
 
-    // Production Store functionality (previously semiFinishedProducts)
     const handleAddProductionStore = () => {
         setProductionStores([
             ...productionStores,
-            {name: '', barkod: ''}
+            { name: '', barkod: '' }
         ]);
     };
 
@@ -118,15 +133,16 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({onTog
                 productionStores: productionStores.map(store => ({
                     name: store.name,
                     barkod: store.barkod
-                }))
+                })),
+                barcode: barcode
             };
-
-            // Use a direct URL since productionInstructions might not be in apiUrl
             await apiClient.post(apiUrl.ProductionIns, payload);
             toast.success('Üretim talimatı başarıyla kaydedildi');
             form.resetFields();
             setProductionToMachines([]);
             setProductionStores([]);
+            setBarcode('');
+            setIsBarcodeDisabled(false);
         } catch (error) {
             message.error('Kayıt sırasında bir hata oluştu');
         }
@@ -134,140 +150,162 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({onTog
 
     return (
         <>
-            <HeaderComponent onToggleMenu={onToggleMenu}/>
-            <ToastContainer/>
-            <div style={{marginTop: 20}}></div>
-            <Form
-                form={form}
-                layout="vertical"
-                onFinish={onFinish}
-            >
-                <Form.Item
-                    name="title"
-                    label="Talimat Adı"
-                    rules={[{required: true, message: 'Lütfen talimat adını giriniz'}]}
+            <HeaderComponent onToggleMenu={onToggleMenu} />
+            <ToastContainer />
+            <div style={{ padding: '24px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+                <Card
+                    title="Üretim Talimatı Oluştur"
+                    style={{ maxWidth: 1200, margin: '0 auto' }}
+                    headStyle={{ fontSize: '20px', fontWeight: 'bold', borderBottom: '1px solid #f0f0f0' }}
                 >
-                    <Input placeholder="Talimat adını giriniz"/>
-                </Form.Item>
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={onFinish}
+                    >
+                        <Form.Item
+                            name="title"
+                            label="Talimat Adı"
+                            rules={[{ required: true, message: 'Lütfen talimat adını giriniz' }]}
+                        >
+                            <Input placeholder="Talimat adını giriniz" />
+                        </Form.Item>
 
-                <Form.Item
-                    name="description"
-                    label="Açıklama"
-                    rules={[{required: true, message: 'Lütfen açıklama giriniz'}]}
-                >
-                    <Input.TextArea rows={4} placeholder="Açıklama giriniz"/>
-                </Form.Item>
-
-                {/* Machines Section */}
-                <div className="section-header"
-                     style={{marginBottom: 16, borderBottom: '1px solid #f0f0f0', paddingBottom: 8}}>
-                    <h3>Makine Bilgileri</h3>
-                    <Button type="dashed" onClick={handleAddMachine} block>
-                        + Makine Ekle
-                    </Button>
-                </div>
-
-                {productionToMachines.map((machine, index) => (
-                    <div key={index} style={{marginBottom: 16}}>
-                        <Row align="middle" gutter={8}>
-                            <Col span={24}>
-                                <Form.Item
-                                    label={`${index + 1}. İşlem Makinesi`}
-                                    required
-                                    style={{marginBottom: 8}}
-                                >
-                                    <div style={{display: 'flex', alignItems: 'center'}}>
-                                        <Select
-                                            style={{flex: 1}}
-                                            placeholder="Makine seçiniz"
-                                            value={machine.machineId || undefined}
-                                            onChange={(value) => handleMachineChange(value, index)}
-                                        >
-                                            {machines.map(m => (
-                                                <Select.Option key={m.id} value={m.id}>{m.name}</Select.Option>
-                                            ))}
-                                        </Select>
-                                        <Button
-                                            type="link"
-                                            danger
-                                            onClick={() => handleRemoveMachine(index)}
-                                            style={{
-                                                background: "#f35757",
-                                                marginLeft: 10,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                height: 32
-                                            }}
-                                        >
-                                            <MdDeleteForever color={"white"}/>
+                        <Form.Item
+                            label="Üretim Talimatı Barkodu"
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Input
+                                    placeholder="Barkod numarası"
+                                    value={barcode}
+                                    onChange={(e) => setBarcode(e.target.value)}
+                                    disabled={isBarcodeDisabled}
+                                    style={{ flex: 1 }}
+                                />
+                                {!isBarcodeDisabled && (
+                                    <Button type="primary" onClick={generateBarcode}>
+                                        Otomatik Oluştur
+                                    </Button>
+                                )}
+                                {isBarcodeDisabled && (
+                                    <>
+                                        <Button type="default" onClick={refreshBarcode}>
+                                            Yenile
                                         </Button>
-                                    </div>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </div>
-                ))}
-
-                {/* Production Stores Section (previously semiFinishedProducts) */}
-                <div className="section-header"
-                     style={{marginTop: 24, marginBottom: 16, borderBottom: '1px solid #f0f0f0', paddingBottom: 8}}>
-                    <h3>Üretim Yarı Mamül Bilgileri</h3>
-                    <Button type="dashed" onClick={handleAddProductionStore} block>
-                        + Yarı Mamül Ekle
-                    </Button>
-                </div>
-
-                {productionStores.map((store, index) => (
-                    <div key={index} style={{marginBottom: 16}}>
-                        <Row align="middle" gutter={8}>
-                            <Col span={24}>
-                                <Form.Item
-                                    label={`${index + 1}. Yarı Mamül`}
-                                    required
-                                    style={{marginBottom: 0}}
-                                >
-                                    <div style={{display: 'flex', alignItems: 'center'}}>
-                                        <Input
-                                            style={{flex: 1, marginRight: 8}}
-                                            placeholder="Ürün adı"
-                                            value={store.name}
-                                            onChange={(e) => handleProductionStoreChange('name', e.target.value, index)}
-                                        />
-                                        <Input
-                                            style={{flex: 1}}
-                                            placeholder="Ürün barkodu"
-                                            value={store.barkod}
-                                            onChange={(e) => handleProductionStoreChange('barkod', e.target.value, index)}
-                                        />
-                                        <Button
-                                            type="link"
-                                            danger
-                                            onClick={() => handleRemoveProductionStore(index)}
-                                            style={{
-                                                background: "#f35757",
-                                                marginLeft: 10,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                height: 32
-                                            }}
-                                        >
-                                            <MdDeleteForever color={"white"}/>
+                                        <Button type="default" danger onClick={cancelBarcode}>
+                                            İptal
                                         </Button>
-                                    </div>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </div>
-                ))}
+                                    </>
+                                )}
+                            </div>
+                        </Form.Item>
 
-                <Form.Item style={{marginTop: 24}}>
-                    <Button type="primary" htmlType="submit">
-                        Kaydet
-                    </Button>
-                </Form.Item>
-            </Form>
+                        <Form.Item
+                            name="description"
+                            label="Açıklama"
+                            rules={[{ required: true, message: 'Lütfen açıklama giriniz' }]}
+                        >
+                            <Input.TextArea rows={4} placeholder="Açıklama giriniz" />
+                        </Form.Item>
+
+                        {/* Machines Section */}
+                        <Card
+                            title="Makine Bilgileri"
+                            style={{ marginBottom: 24 }}
+                            extra={
+                                <Button type="dashed" onClick={handleAddMachine}>
+                                    + Makine Ekle
+                                </Button>
+                            }
+                        >
+                            {productionToMachines.map((machine, index) => (
+                                <div key={index} style={{ marginBottom: 16 }}>
+                                    <Row align="middle" gutter={8}>
+                                        <Col span={24}>
+                                            <Form.Item
+                                                label={`${index + 1}. İşlem Makinesi`}
+                                                required
+                                                style={{ marginBottom: 8 }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Select
+                                                        style={{ flex: 1 }}
+                                                        placeholder="Makine seçiniz"
+                                                        value={machine.machineId || undefined}
+                                                        onChange={(value) => handleMachineChange(value, index)}
+                                                    >
+                                                        {machines.map(m => (
+                                                            <Select.Option key={m.id} value={m.id}>{m.name}</Select.Option>
+                                                        ))}
+                                                    </Select>
+                                                    <Button
+                                                        type="primary"
+                                                        danger
+                                                        onClick={() => handleRemoveMachine(index)}
+                                                        icon={<MdDeleteForever />}
+                                                    />
+                                                </div>
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+                                </div>
+                            ))}
+                        </Card>
+
+                        {/* Production Stores Section */}
+                        <Card
+                            title="Üretim Yarı Mamül Bilgileri"
+                            style={{ marginBottom: 24 }}
+                            extra={
+                                <Button type="dashed" onClick={handleAddProductionStore}>
+                                    + Yarı Mamül Ekle
+                                </Button>
+                            }
+                        >
+                            {productionStores.map((store, index) => (
+                                <div key={index} style={{ marginBottom: 16 }}>
+                                    <Row align="middle" gutter={8}>
+                                        <Col span={24}>
+                                            <Form.Item
+                                                label={`${index + 1}. Yarı Mamül`}
+                                                required
+                                                style={{ marginBottom: 0 }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Input
+                                                        placeholder="Ürün adı"
+                                                        value={store.name}
+                                                        onChange={(e) => handleProductionStoreChange('name', e.target.value, index)}
+                                                        style={{ flex: 1 }}
+                                                    />
+                                                    <Input
+                                                        placeholder="Ürün barkodu"
+                                                        value={store.barkod}
+                                                        onChange={(e) => handleProductionStoreChange('barkod', e.target.value, index)}
+                                                        style={{ flex: 1 }}
+                                                    />
+                                                    <Button
+                                                        type="primary"
+                                                        danger
+                                                        onClick={() => handleRemoveProductionStore(index)}
+                                                        icon={<MdDeleteForever />}
+                                                    />
+                                                </div>
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+                                </div>
+                            ))}
+                        </Card>
+
+                        <Form.Item style={{ marginTop: 24 }}>
+                            <Button type="primary" htmlType="submit" size="large">
+                                Kaydet
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                </Card>
+            </div>
         </>
     );
 };

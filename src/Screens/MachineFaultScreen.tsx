@@ -1,6 +1,6 @@
-import React, {memo, useEffect, useState} from "react";
+import React, { memo, useEffect, useState } from "react";
 import axios from "axios";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
 import {
     Table,
@@ -12,29 +12,27 @@ import {
     Drawer,
     Form,
     message,
-    Spin,
     Typography,
     Row,
     Col,
     Select,
     DatePicker,
-    Modal
+    Descriptions,
+    Spin
 } from "antd";
 import {
     DownloadOutlined,
     PlusOutlined,
     FilterOutlined,
-    TableOutlined,
-    UnorderedListOutlined,
 } from "@ant-design/icons";
-import {apiUrl} from "../Settings";
-import type {ColumnsType} from "antd/es/table";
+import { apiUrl } from "../Settings";
+import type { ColumnsType } from "antd/es/table";
 import moment from "moment";
-import {Dayjs} from "dayjs";
+import { Dayjs } from "dayjs";
 import apiClient from "../Utils/ApiClient";
 
-const {Title} = Typography;
-const {Option} = Select;
+const { Title } = Typography;
+const { Option } = Select;
 
 interface MachineFaultRecord {
     faultId: number;
@@ -64,13 +62,13 @@ interface MachineScreenProps {
     onToggleMenu: () => void;
 }
 
-
-const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) => {
+const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({ onToggleMenu }) => {
     const [data, setData] = useState<MachineFaultRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
     const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
-    const [viewMode, setViewMode] = useState<"table" | "card">("table");
+    const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState<MachineFaultRecord | null>(null);
     const [filters, setFilters] = useState<Filters>({
         severity: "",
         isResolved: null,
@@ -79,7 +77,7 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
     });
 
     useEffect(() => {
-        let isMounted = true; // Component'in hala mount olup olmadığını kontrol eder
+        let isMounted = true;
 
         const fetchData = async () => {
             setLoading(true);
@@ -97,7 +95,7 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
         fetchData();
 
         return () => {
-            isMounted = false; // Component unmount olduğunda istek iptal edilir
+            isMounted = false;
         };
     }, []);
 
@@ -164,9 +162,6 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
                     <Button type="link" onClick={() => handleViewDetails(record)}>
                         Detay
                     </Button>
-                    <Link to={`/machine-fault-update/${record.faultId}`}>
-                        <Button type="link">Düzenle</Button>
-                    </Link>
                 </Space>
             ),
             width: "10%",
@@ -174,18 +169,13 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
     ];
 
     const handleViewDetails = (record: MachineFaultRecord) => {
-        Modal.info({
-            title: `Arıza Detayı - ${record.machine.name}`,
-            width: 800,
-            content: (
-                <div>
-                    <p><strong>Açıklama:</strong> {record.faultDescription}</p>
-                    <p><strong>Sebep:</strong> {record.cause}</p>
-                    <p><strong>Çözüm:</strong> {record.solution}</p>
-                    <p><strong>Çözen:</strong> {record.resolvedBy}</p>
-                </div>
-            ),
-        });
+        setSelectedRecord(record);
+        setDetailDrawerVisible(true);
+    };
+
+    const handleCloseDetailDrawer = () => {
+        setDetailDrawerVisible(false);
+        setSelectedRecord(null);
     };
 
     const handleExportPDF = () => {
@@ -211,7 +201,7 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
 
     return (
         <div>
-            <HeaderComponent onToggleMenu={onToggleMenu}/>
+            <HeaderComponent onToggleMenu={onToggleMenu} />
             <Card>
                 <Row gutter={[16, 16]} justify="space-between" align="middle">
                     <Col xs={24} sm={12} md={8} lg={6}>
@@ -224,25 +214,25 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
                                 placeholder="Arama..."
                                 allowClear
                                 onSearch={setSearchText}
-                                style={{width: 200}}
+                                style={{ width: 200 }}
                             />
 
                             <Button
-                                icon={<FilterOutlined/>}
+                                icon={<FilterOutlined />}
                                 onClick={() => setFilterDrawerVisible(true)}
                             >
                                 Filtrele
                             </Button>
 
                             <Button
-                                icon={<DownloadOutlined/>}
+                                icon={<DownloadOutlined />}
                                 onClick={handleExportPDF}
                             >
                                 PDF İndir
                             </Button>
 
                             <Link to="/machine-fault-create">
-                                <Button type="primary" icon={<PlusOutlined/>}>
+                                <Button type="primary" icon={<PlusOutlined />}>
                                     Yeni Arıza Ekle
                                 </Button>
                             </Link>
@@ -261,9 +251,10 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
                         showSizeChanger: true,
                         showQuickJumper: true
                     }}
-                    scroll={{x: 1000}}
+                    scroll={{ x: 1000 }}
                 />
 
+                {/* Filtre Drawer */}
                 <Drawer
                     title="Filtreler"
                     placement="right"
@@ -276,7 +267,7 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
                             <Select
                                 allowClear
                                 placeholder="Şiddet seçin"
-                                onChange={(value) => setFilters({...filters, severity: value})}
+                                onChange={(value) => setFilters({ ...filters, severity: value })}
                             >
                                 <Option value="Yüksek">Yüksek</Option>
                                 <Option value="Orta">Orta</Option>
@@ -288,7 +279,7 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
                             <Select
                                 allowClear
                                 placeholder="Durum seçin"
-                                onChange={(value) => setFilters({...filters, isResolved: value})}
+                                onChange={(value) => setFilters({ ...filters, isResolved: value })}
                             >
                                 <Option value={true}>Çözüldü</Option>
                                 <Option value={false}>Beklemede</Option>
@@ -299,7 +290,7 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
                             <Select
                                 allowClear
                                 placeholder="Bildiren kişiyi seçin"
-                                onChange={(value) => setFilters({...filters, reportedBy: value})}
+                                onChange={(value) => setFilters({ ...filters, reportedBy: value })}
                             >
                                 {Array.from(new Set(data.map(item => item.reportedBy))).map(person => (
                                     <Option key={person} value={person}>{person}</Option>
@@ -313,10 +304,47 @@ const MachineFaultScreen: React.FC<MachineScreenProps> = memo(({onToggleMenu}) =
                                     ...filters,
                                     dateRange: dates as [Dayjs | null, Dayjs | null] | null
                                 })}
-                                style={{width: '100%'}}
+                                style={{ width: '100%' }}
                             />
                         </Form.Item>
                     </Form>
+                </Drawer>
+
+                {/* Detay Drawer */}
+                <Drawer
+                    title="Arıza Detayları"
+                    placement="right"
+                    onClose={handleCloseDetailDrawer}
+                    open={detailDrawerVisible}
+                    width={600}
+                >
+                    {selectedRecord && (
+                        <Descriptions bordered column={1}>
+                            <Descriptions.Item label="Makine Adı">{selectedRecord.machine.name}</Descriptions.Item>
+                            <Descriptions.Item label="Makine Kodu">{selectedRecord.machine.code}</Descriptions.Item>
+                            <Descriptions.Item label="Arıza Başlangıç Tarihi">
+                                {moment(selectedRecord.faultStartDate).format("DD/MM/YYYY")}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Arıza Bitiş Tarihi">
+                                {moment(selectedRecord.faultEndDate).format("DD/MM/YYYY")}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Şiddet">
+                                <Tag color={selectedRecord.faultSeverity === "Yüksek" ? "red" : selectedRecord.faultSeverity === "Orta" ? "orange" : "green"}>
+                                    {selectedRecord.faultSeverity}
+                                </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Durum">
+                                <Tag color={selectedRecord.isResolved ? "green" : "red"}>
+                                    {selectedRecord.isResolved ? "Çözüldü" : "Beklemede"}
+                                </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Açıklama">{selectedRecord.faultDescription}</Descriptions.Item>
+                            <Descriptions.Item label="Sebep">{selectedRecord.cause}</Descriptions.Item>
+                            <Descriptions.Item label="Çözüm">{selectedRecord.solution}</Descriptions.Item>
+                            <Descriptions.Item label="Bildiren">{selectedRecord.reportedBy}</Descriptions.Item>
+                            <Descriptions.Item label="Çözen">{selectedRecord.resolvedBy}</Descriptions.Item>
+                        </Descriptions>
+                    )}
                 </Drawer>
             </Card>
         </div>

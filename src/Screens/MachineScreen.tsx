@@ -37,7 +37,7 @@ const {Title} = Typography;
 const {Option} = Select;
 
 interface MachineRecord {
-    machineId: number;
+    id: number;
     name: string;
     code: string;
     location: string;
@@ -137,8 +137,8 @@ const MachineScreen:React.FC<MachineScreenProps> = ({onToggleMenu}) => {
         },
         {
             title: "Kod",
-            dataIndex: "code",
-            key: "code",
+            dataIndex: "serialNumber",
+            key: "serialNumber",
             width: "10%",
         },
         {
@@ -190,13 +190,13 @@ const MachineScreen:React.FC<MachineScreenProps> = ({onToggleMenu}) => {
             key: "actions",
             render: (_, record) => (
                 <Space>
-                    <Link to={`/machine-update-machine/${record.machineId}`}>
+                    <Link to={`/machine-update-machine/${record.id}`}>
                         <Button type="link">Düzenle</Button>
                     </Link>
                     <Button
                         type="primary"
                         icon={<QrcodeOutlined />}
-                        onClick={() => generateQRCode(record.machineId)}
+                        onClick={() => generateQRCode(record.id)}
                     >
                         QR Kodu
                     </Button>

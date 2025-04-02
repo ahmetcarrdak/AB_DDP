@@ -67,6 +67,7 @@ export const apiUrl = {
 
     ProductionIns: "ProductionInstruction/create",
     ProductionInsList: "ProductionInstruction/company-instructions",
+    ProductionInsProcess: "ProductionInstruction/process",
     ProductionInsDetail: "ProductionInstruction/detail",
     ProductionInsUpdate: "ProductionInstruction/update",
     ProductionInsDelete: "ProductionInstruction/delete",
@@ -85,55 +86,7 @@ const icons = {
     makineYönetim: <FaCogs className="menu-item-icon"/>,
     bakımKayit: <FaTools className="menu-item-icon"/>,
 };
-/*
-export const menus = [
-    {
-        id: 1,
-        title: "Panel",
-        icon: icons.dashboard,
-        action: "/",
-    },
-    {
-        id: 3,
-        title: "Personel Yönetim",
-        icon: icons.personelYönetim,
-        action: "/person",
-    },
-    {
-        id: 2,
-        title: "Üretim Yönetim",
-        icon: icons.depo,
-        action: "#",
-        subMenu: [
-            {id: 2.1, title: "Depolar yönet", action: "/store"},
-            {id: 2.2, title: "İş emirlerini yönet", action: "/work"},
-            {id: 2.3, title: "Yarı Mamül üretim durumları", action: "/work-status"},
-        ],
-    },
-    {
-        id: 5,
-        title: "Sipariş Yönetim",
-        icon: icons.siparişYönetim,
-        action: "#",
-        subMenu: [
-            {id: 5.1, title: "Siparişleri yönet", action: "/order"},
-            {id: 5.3, title: "Sipariş durumları", action: "/order-status"},
-            {id: 5.2, title: "Kalite Kontrol", action: "/quality-control"},
-        ],
-    },
-    {
-        id: 4,
-        title: "Makine Yönetim",
-        icon: icons.makineYönetim,
-        action: "#",
-        subMenu: [
-            {id: 4.1, title: "Makineleri yönet", action: "/machine"},
-            {id: 4.2, title: "Arızaları Yönet", action: "/machine-fault"},
-            {id: 4.3, title: "Bakım Kayıtları", action: "/maintenance-record"},
-        ],
-    },
-];
-*/
+
 
 export const menus = [
     {

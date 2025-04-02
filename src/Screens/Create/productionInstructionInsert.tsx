@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 interface Machine {
     id: number;
     name: string;
+    barcode: string;
 }
 
 interface ProductionStore {
@@ -31,6 +32,7 @@ interface ProductionInstruction {
     productionToMachines: ProductionToMachine[];
     productionStores: ProductionStore[];
     barcode?: string;
+    count: number;
 }
 
 interface ProdutionInstructionProps {
@@ -134,7 +136,8 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({ onTo
                     name: store.name,
                     barkod: store.barkod
                 })),
-                barcode: barcode
+                barcode: barcode,
+                count: values.count
             };
             await apiClient.post(apiUrl.ProductionIns, payload);
             toast.success('Üretim talimatı başarıyla kaydedildi');
@@ -208,6 +211,14 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({ onTo
                             <Input.TextArea rows={4} placeholder="Açıklama giriniz" />
                         </Form.Item>
 
+                        <Form.Item
+                            name="count"
+                            label="Üretilecek Adet"
+                            rules={[{ required: true, message: 'Lütfen adet giriniz' }]}
+                        >
+                            <Input placeholder={"Adet Giriniz"} type="number"></Input>
+                        </Form.Item>
+
                         {/* Machines Section */}
                         <Card
                             title="Makine Bilgileri"
@@ -230,12 +241,29 @@ const ProductionInstructionInsert: React.FC<ProdutionInstructionProps> = ({ onTo
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <Select
                                                         style={{ flex: 1 }}
-                                                        placeholder="Makine seçiniz"
+                                                        placeholder="Makine seçiniz (ad veya barkod ile arayın)"
                                                         value={machine.machineId || undefined}
                                                         onChange={(value) => handleMachineChange(value, index)}
+                                                        showSearch
+                                                        optionFilterProp="children"
+                                                        //@ts-ignore
+                                                        filterOption={(input, option) => {
+                                                            if (!option || !option.children) return false;
+                                                            const machineData = machines.find(m => m.id === option.value);
+                                                            const searchText = input.toLowerCase();
+                                                            return (
+                                                                machineData?.name.toLowerCase().includes(searchText) ||
+                                                                machineData?.barcode.toLowerCase().includes(searchText)
+                                                            );
+                                                        }}
                                                     >
                                                         {machines.map(m => (
-                                                            <Select.Option key={m.id} value={m.id}>{m.name}</Select.Option>
+                                                            <Select.Option key={m.id} value={m.id}>
+                                                                <div>
+                                                                    <div>{m.name}</div>
+                                                                    <div style={{ fontSize: '12px', color: '#888' }}>Barkod: {m.barcode}</div>
+                                                                </div>
+                                                            </Select.Option>
                                                         ))}
                                                     </Select>
                                                     <Button

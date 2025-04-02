@@ -34,6 +34,7 @@
     "datatables.net-react": "^1.0.0",
     "draft-js": "^0.11.7",
     "electron": "^34.1.1",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",

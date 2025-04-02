@@ -1,6 +1,5 @@
-import React, {memo, useEffect, useState, useRef} from "react";
-import axios from "axios";
-import {Link} from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
 import {
     Table,
@@ -12,34 +11,46 @@ import {
     Drawer,
     Form,
     message,
-    Spin,
     Typography,
     Row,
     Col,
     Select,
     DatePicker,
-    Switch, Modal, QRCode
+    Modal,
+    QRCode,
+    Dropdown,
+    Badge,
+    Tooltip
 } from "antd";
 import {
     DownloadOutlined,
     PlusOutlined,
     FilterOutlined,
-    TableOutlined,
-    UnorderedListOutlined, QrcodeOutlined,
+    ReloadOutlined,
+    QrcodeOutlined,
+    MoreOutlined,
+    FileExcelOutlined,
+    FilePdfOutlined,
+    BarcodeOutlined
 } from "@ant-design/icons";
-import {apiUrl} from "../Settings";
-import type {ColumnsType} from "antd/es/table";
+import { apiUrl } from "../Settings";
+import type { ColumnsType } from "antd/es/table";
 import moment from "moment";
-import {Dayjs} from "dayjs";
+import { Dayjs } from "dayjs";
 import apiClient from "../Utils/ApiClient";
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import Barcode from "react-barcode";
 
-const {Title} = Typography;
-const {Option} = Select;
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 interface MachineRecord {
     id: number;
     name: string;
-    code: string;
+    barcode: string;
+    serialNumber: string;
     location: string;
     manufacturer: string;
     model: string;
@@ -48,131 +59,187 @@ interface MachineRecord {
     isOperational: boolean;
 }
 
-interface Filters {
-    location: string;
-    manufacturer: string;
-    isOperational: boolean | null;
-    dateRange: [Dayjs | null, Dayjs | null] | null;
-}
-
-interface MachineScreenProps {
-    onToggleMenu: () => void;
-}
-
-const MachineScreen:React.FC<MachineScreenProps> = ({onToggleMenu}) => {
+const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu }) => {
+    // State'ler
     const [data, setData] = useState<MachineRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
-    const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
-    const [viewMode, setViewMode] = useState<"table" | "card">("table");
-    const [qrModalVisible, setQrModalVisible] = useState(false);
-    const [qrUrl, setQrUrl] = useState("");
-    const [selectedFormat, setSelectedFormat] = useState<string>("png");
-    const [filters, setFilters] = useState<Filters>({
+    const [filters, setFilters] = useState({
         location: "",
         manufacturer: "",
-        isOperational: null,
-        dateRange: null,
+        isOperational: null as boolean | null,
+        dateRange: null as [Dayjs | null, Dayjs | null] | null
     });
-    const qrRef = useRef<any>(null);
+    const [qrModalVisible, setQrModalVisible] = useState(false);
+    const [barcodeModalVisible, setBarcodeModalVisible] = useState(false);
+    const [currentBarcode, setCurrentBarcode] = useState("");
+    const [qrUrl, setQrUrl] = useState("");
+    const [selectedFormat, setSelectedFormat] = useState<string>("png");
+    const tableRef = useRef<HTMLDivElement>(null);
+    const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+
+    // Veri çekme
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const response = await apiClient.get(apiUrl.machine);
+            setData(response.data);
+        } catch (error) {
+            message.error("Veri yüklenirken hata oluştu");
+            console.error("Error:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        let isMounted = true; // Component'in mount durumunu takip et
-
-        const fetchData = async () => {
-            try {
-                const response = await apiClient.get(apiUrl.machine);
-                if (isMounted) setData(response.data);
-            } catch (error) {
-                message.error("Veri yüklenirken bir hata oluştu");
-                console.error("Error fetching data:", error);
-            } finally {
-                if (isMounted) setLoading(false);
-            }
-        };
-
         fetchData();
-
-        return () => {
-            isMounted = false; // Component unmount olduğunda istek iptal edilir
-        };
     }, []);
 
+    // QR Code işlemleri
     const generateQRCode = (machineId: number) => {
-        const link = `https://senindomainin.com/machine-detail/${machineId}`;
+        const link = `${window.location.origin}/QR-Menu/${machineId}`;
         setQrUrl(link);
         setQrModalVisible(true);
     };
 
     const downloadQRCode = () => {
-        // Ant Design QRCode bileşeni için indirme işlemi
-        const canvas = document.querySelector('.ant-qrcode canvas') as HTMLCanvasElement;
-        if (!canvas) {
-            message.error("QR kodu indirilemedi!");
-            return;
-        }
-
         try {
-            const imageURL = canvas.toDataURL(`image/${selectedFormat}`);
-            const link = document.createElement("a");
-            link.href = imageURL;
-            link.download = `machine-qr-code.${selectedFormat}`;
-            document.body.appendChild(link);
+            const canvas = document.querySelector('.ant-qrcode canvas') as HTMLCanvasElement;
+            if (!canvas) {
+                message.error("QR kodu bulunamadı!");
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.download = `qr-code.${selectedFormat}`;
+            link.href = selectedFormat === 'png'
+                ? canvas.toDataURL('image/png')
+                : canvas.toDataURL('image/jpeg', 0.92);
             link.click();
-            document.body.removeChild(link);
             message.success("QR kodu indirildi");
         } catch (error) {
-            message.error("QR kodu indirilirken bir hata oluştu");
-            console.error("Error downloading QR code:", error);
+            message.error("QR kodu indirilemedi");
+            console.error(error);
         }
     };
 
+    // Export işlemleri
+    const exportToExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(filteredData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Makineler");
+        XLSX.writeFile(workbook, "makineler.xlsx");
+        message.success("Excel indiriliyor");
+    };
+
+    const exportToPDF = async () => {
+        if (!tableRef.current) return;
+
+        try {
+            message.loading({ content: 'PDF hazırlanıyor...', key: 'pdf' });
+            const canvas = await html2canvas(tableRef.current);
+            const pdf = new jsPDF('landscape');
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, 280, 150);
+            pdf.save('makineler.pdf');
+            message.success({ content: 'PDF indirildi', key: 'pdf' });
+        } catch (error) {
+            message.error({ content: 'PDF oluşturulamadı', key: 'pdf' });
+            console.error(error);
+        }
+    };
+
+    // Filtreleme
+    const filteredData = data.filter(record => {
+        const matchesSearch = Object.values(record).some(value =>
+            String(value).toLowerCase().includes(searchText.toLowerCase())
+        );
+        const matchesLocation = !filters.location || record.location === filters.location;
+        const matchesManufacturer = !filters.manufacturer || record.manufacturer === filters.manufacturer;
+        const matchesOperational = filters.isOperational === null || record.isOperational === filters.isOperational;
+        // Filtreleme kısmında tarih karşılaştırmasını güncelleyin:
+        const matchesDateRange = !filters.dateRange || !filters.dateRange[0] || !filters.dateRange[1] ||
+            moment(record.purchaseDate).isBetween(
+                filters.dateRange[0]?.toDate(), // Dayjs -> Date çevrimi
+                filters.dateRange[1]?.toDate(), // Dayjs -> Date çevrimi
+                'day',
+                '[]'
+            );
+
+        return matchesSearch && matchesLocation && matchesManufacturer && matchesOperational && matchesDateRange;
+    });
+
+    // Tablo kolonları
     const columns: ColumnsType<MachineRecord> = [
         {
-            title: "Ad",
+            title: "Makine Adı",
             dataIndex: "name",
             key: "name",
             sorter: (a, b) => a.name.localeCompare(b.name),
-            width: "15%",
+            fixed: 'left',
+            width: 180,
         },
         {
-            title: "Kod",
+            title: "Barkod",
+            dataIndex: "barcode",
+            key: "barcode",
+            render: (barcode) => (
+                <Button
+                    type="link"
+                    onClick={() => {
+                        setCurrentBarcode(barcode);
+                        setBarcodeModalVisible(true);
+                    }}
+                    icon={<BarcodeOutlined />}
+                >
+                    {barcode}
+                </Button>
+            ),
+            width: 150,
+        },
+        {
+            title: "Seri No",
             dataIndex: "serialNumber",
             key: "serialNumber",
-            width: "10%",
+            width: 120,
         },
         {
             title: "Konum",
             dataIndex: "location",
             key: "location",
-            width: "10%",
+            width: 120,
         },
         {
             title: "Üretici",
             dataIndex: "manufacturer",
             key: "manufacturer",
-            width: "10%",
+            width: 120,
         },
         {
             title: "Model",
             dataIndex: "model",
             key: "model",
-            width: "10%",
+            width: 120,
         },
         {
-            title: "Toplam Arıza",
+            title: "Arıza",
             dataIndex: "totalFault",
             key: "totalFault",
-            sorter: (a, b) => a.totalFault - b.totalFault,
-            width: "10%",
+            render: (count) => (
+                <Badge
+                    count={count}
+                    showZero
+                    style={{ backgroundColor: count > 0 ? '#ff4d4f' : '#52c41a' }}
+                />
+            ),
+            width: 100,
         },
         {
-            title: "Satın Alma Tarihi",
+            title: "Satın Alma",
             dataIndex: "purchaseDate",
             key: "purchaseDate",
             render: (date) => moment(date).format("DD.MM.YYYY"),
-            sorter: (a, b) => moment(a.purchaseDate).unix() - moment(b.purchaseDate).unix(),
-            width: "15%",
+            width: 120,
         },
         {
             title: "Durum",
@@ -183,194 +250,277 @@ const MachineScreen:React.FC<MachineScreenProps> = ({onToggleMenu}) => {
                     {operational ? "Aktif" : "Pasif"}
                 </Tag>
             ),
-            width: "10%",
+            width: 100,
         },
         {
             title: "İşlemler",
             key: "actions",
+            fixed: 'right',
+            width: 120,
             render: (_, record) => (
-                <Space>
-                    <Link to={`/machine-update-machine/${record.id}`}>
-                        <Button type="link">Düzenle</Button>
-                    </Link>
-                    <Button
-                        type="primary"
-                        icon={<QrcodeOutlined />}
-                        onClick={() => generateQRCode(record.id)}
-                    >
-                        QR Kodu
-                    </Button>
-                </Space>
+                <Dropdown
+                    menu={{
+                        items: [
+                            {
+                                key: 'edit',
+                                label: (
+                                    <Link to={`/machine-update-machine/${record.id}`}>
+                                        Düzenle
+                                    </Link>
+                                ),
+                                icon: <PlusOutlined />,
+                            },
+                            {
+                                key: 'qrcode',
+                                label: 'QR Kodu',
+                                icon: <QrcodeOutlined />,
+                                onClick: () => generateQRCode(record.id),
+                            },
+                        ],
+                    }}
+                >
+                    <Button icon={<MoreOutlined />} />
+                </Dropdown>
             ),
-            width: "10%",
         },
     ];
 
-    const handleExportPDF = () => {
-        message.success("PDF indirme başladı");
-        // PDF export logic here
-    };
-
-    const filteredData = data.filter(record => {
-        const matchesSearch = Object.values(record).some(value =>
-            String(value).toLowerCase().includes(searchText.toLowerCase())
-        );
-
-        const matchesLocation = !filters.location || record.location === filters.location;
-        const matchesManufacturer = !filters.manufacturer || record.manufacturer === filters.manufacturer;
-        const matchesOperational = filters.isOperational === null || record.isOperational === filters.isOperational;
-
-        const matchesDateRange = !filters.dateRange || !filters.dateRange[0] || !filters.dateRange[1] ||
-            moment(record.purchaseDate).isBetween(filters.dateRange[0]?.toDate() ?? null, filters.dateRange[1]?.toDate() ?? null, 'day', '[]');
-
-        return matchesSearch && matchesLocation && matchesManufacturer &&
-            matchesOperational && matchesDateRange;
-    });
-
     return (
-        <div>
-            <HeaderComponent onToggleMenu={onToggleMenu}/>
-            <Card>
-                <Row gutter={[16, 16]} justify="space-between" align="middle">
-                    <Col xs={24} sm={12} md={8} lg={6}>
-                        <Title level={4}>Makineler</Title>
-                    </Col>
+        <div style={{ background: '#f0f2f5', minHeight: '100vh' }}>
+            <HeaderComponent onToggleMenu={onToggleMenu} />
 
-                    <Col xs={24} sm={12} md={16} lg={18}>
-                        <Space wrap>
-                            <Input.Search
-                                placeholder="Arama..."
-                                allowClear
-                                onSearch={setSearchText}
-                                style={{width: 200}}
-                            />
+            <Card
+                style={{ margin: 16, borderRadius: 8 }}
+                bodyStyle={{ padding: 0 }}
+            >
+                <div style={{ padding: 24 }}>
+                    <Row gutter={[16, 16]} justify="space-between" align="middle">
+                        <Col>
+                            <Title level={4} style={{ margin: 0 }}>Makine Listesi</Title>
+                        </Col>
 
-                            <Button
-                                icon={<FilterOutlined/>}
-                                onClick={() => setFilterDrawerVisible(true)}
-                            >
-                                Filtrele
-                            </Button>
+                        <Col>
+                            <Space wrap>
+                                <Input.Search
+                                    placeholder="Ara..."
+                                    allowClear
+                                    onSearch={setSearchText}
+                                    style={{ width: 200 }}
+                                />
 
-                            <Button
-                                icon={<DownloadOutlined/>}
-                                onClick={handleExportPDF}
-                            >
-                                PDF İndir
-                            </Button>
+                                <Tooltip title="Yenile">
+                                    <Button
+                                        icon={<ReloadOutlined />}
+                                        onClick={fetchData}
+                                    />
+                                </Tooltip>
 
-                            <Link to="/machine-create">
-                                <Button type="primary" icon={<PlusOutlined/>}>
-                                    Makine Ekle
+                                <Button
+                                    icon={<FilterOutlined />}
+                                    onClick={() => setFilterDrawerVisible(true)}
+                                >
+                                    Filtrele
                                 </Button>
-                            </Link>
-                        </Space>
-                    </Col>
-                </Row>
 
-                <Table
-                    columns={columns}
-                    dataSource={filteredData}
-                    loading={loading}
-                    rowKey="machineId"
-                    pagination={{
-                        showSizeChanger: true,
-                        showTotal: (total) => `Toplam ${total} kayıt`,
-                        defaultPageSize: 10,
-                        pageSizeOptions: ["10", "50", "100", "200"]
-                    }}
-                    scroll={{x: true}}
-                />
+                                <Dropdown
+                                    menu={{
+                                        items: [
+                                            {
+                                                key: 'excel',
+                                                label: 'Excel',
+                                                icon: <FileExcelOutlined />,
+                                                onClick: exportToExcel
+                                            },
+                                            {
+                                                key: 'pdf',
+                                                label: 'PDF',
+                                                icon: <FilePdfOutlined />,
+                                                onClick: exportToPDF
+                                            }
+                                        ]
+                                    }}
+                                >
+                                    <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
+                                </Dropdown>
 
-                <Drawer
-                    title="Filtreler"
-                    placement="right"
-                    onClose={() => setFilterDrawerVisible(false)}
-                    open={filterDrawerVisible}
-                    width={320}
-                >
-                    <Form layout="vertical">
-                        <Form.Item label="Konum">
-                            <Select
-                                allowClear
-                                placeholder="Konum seçin"
-                                onChange={(value) => setFilters({...filters, location: value})}
-                            >
-                                {Array.from(new Set(data.map(item => item.location))).map(location => (
-                                    <Option key={location} value={location}>{location}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
+                                <Link to="/machine-create">
+                                    <Button type="primary" icon={<PlusOutlined />}>
+                                        Yeni Makine
+                                    </Button>
+                                </Link>
+                            </Space>
+                        </Col>
+                    </Row>
+                </div>
 
-                        <Form.Item label="Üretici">
-                            <Select
-                                allowClear
-                                placeholder="Üretici seçin"
-                                onChange={(value) => setFilters({...filters, manufacturer: value})}
-                            >
-                                {Array.from(new Set(data.map(item => item.manufacturer))).map(manufacturer => (
-                                    <Option key={manufacturer} value={manufacturer}>{manufacturer}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item label="Durum">
-                            <Select
-                                allowClear
-                                placeholder="Durum seçin"
-                                onChange={(value) => setFilters({...filters, isOperational: value})}
-                            >
-                                <Option value={true}>Aktif</Option>
-                                <Option value={false}>Pasif</Option>
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item label="Satın Alma Tarihi">
-                            <DatePicker.RangePicker
-                                onChange={(dates) => setFilters({
-                                    ...filters,
-                                    dateRange: dates as [Dayjs | null, Dayjs | null] | null
-                                })}
-                                style={{width: '100%'}}
-                            />
-                        </Form.Item>
-                    </Form>
-                </Drawer>
+                <div ref={tableRef}>
+                    <Table
+                        columns={columns}
+                        dataSource={filteredData}
+                        loading={loading}
+                        rowKey="id"
+                        scroll={{ x: 1300 }}
+                        pagination={{
+                            showSizeChanger: true,
+                            showQuickJumper: true,
+                            showTotal: (total) => `Toplam ${total} makine`,
+                            pageSizeOptions: ["10", "25", "50", "100"],
+                        }}
+                    />
+                </div>
             </Card>
+
+            {/* Filtre Drawer */}
+            <Drawer
+                title="Filtrele"
+                placement="right"
+                onClose={() => setFilterDrawerVisible(false)}
+                open={filterDrawerVisible}
+                width={300}
+            >
+                <Form layout="vertical">
+                    <Form.Item label="Konum">
+                        <Select
+                            allowClear
+                            placeholder="Tüm konumlar"
+                            onChange={(value) => setFilters({...filters, location: value})}
+                        >
+                            {Array.from(new Set(data.map(item => item.location))).map(location => (
+                                <Option key={location} value={location}>{location}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item label="Üretici">
+                        <Select
+                            allowClear
+                            placeholder="Tüm üreticiler"
+                            onChange={(value) => setFilters({...filters, manufacturer: value})}
+                        >
+                            {Array.from(new Set(data.map(item => item.manufacturer))).map(manufacturer => (
+                                <Option key={manufacturer} value={manufacturer}>{manufacturer}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item label="Durum">
+                        <Select
+                            allowClear
+                            placeholder="Tüm durumlar"
+                            onChange={(value) => setFilters({...filters, isOperational: value})}
+                        >
+                            <Option value={true}>Aktif</Option>
+                            <Option value={false}>Pasif</Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item label="Tarih Aralığı">
+                        <DatePicker.RangePicker
+                            style={{ width: '100%' }}
+                            onChange={(dates) => setFilters({
+                                ...filters,
+                                dateRange: dates as [Dayjs | null, Dayjs | null] | null
+                            })}
+                        />
+                    </Form.Item>
+                </Form>
+            </Drawer>
+
+            {/* QR Code Modal */}
             <Modal
-                title="Makine QR Kodu"
+                title="QR Kodu"
                 open={qrModalVisible}
                 onCancel={() => setQrModalVisible(false)}
                 footer={[
-                    <Button key="download" type="primary" onClick={downloadQRCode}>
-                        QR Kodu İndir
-                    </Button>,
                     <Button key="close" onClick={() => setQrModalVisible(false)}>
                         Kapat
                     </Button>,
+                    <Button
+                        key="download"
+                        type="primary"
+                        onClick={downloadQRCode}
+                        icon={<DownloadOutlined />}
+                    >
+                        İndir ({selectedFormat.toUpperCase()})
+                    </Button>
                 ]}
             >
-                {qrUrl && (
-                    <div style={{ textAlign: "center" }}>
-                        <QRCode
-                            value={qrUrl}
-                            size={200}
-                            className="qr-code-element"
-                            type={selectedFormat === "png" ? "canvas" : "svg"}
-                        />
-                        <p>{qrUrl}</p>
-                        <Form.Item label="Format">
-                            <Select
-                                value={selectedFormat}
-                                onChange={(value) => setSelectedFormat(value)}
-                                style={{ width: 120 }}
-                            >
-                                <Option value="png">PNG</Option>
-                                <Option value="jpeg">JPEG</Option>
-                            </Select>
-                        </Form.Item>
-                    </div>
-                )}
+                <div style={{ textAlign: 'center' }}>
+                    <QRCode
+                        value={qrUrl}
+                        size={200}
+                        style={{ marginBottom: 16 }}
+                    />
+                    <Text copyable>{qrUrl}</Text>
+                    <Form.Item label="Format" style={{ marginTop: 16 }}>
+                        <Select
+                            value={selectedFormat}
+                            onChange={setSelectedFormat}
+                            style={{ width: 120 }}
+                        >
+                            <Option value="png">PNG</Option>
+                            <Option value="jpeg">JPEG</Option>
+                        </Select>
+                    </Form.Item>
+                </div>
+            </Modal>
+
+            {/* Barcode Modal */}
+            <Modal
+                title="Barkod Bilgisi"
+                open={barcodeModalVisible}
+                onCancel={() => setBarcodeModalVisible(false)}
+                footer={[
+                    <Button key="close" onClick={() => setBarcodeModalVisible(false)}>
+                        Kapat
+                    </Button>,
+                    <Button
+                        key="download"
+                        type="primary"
+                        icon={<DownloadOutlined />}
+                        onClick={() => {
+                            const canvas = document.getElementById('barcode-canvas') as HTMLCanvasElement;
+                            if (canvas) {
+                                const link = document.createElement('a');
+                                link.download = `barkod-${currentBarcode}.png`;
+                                link.href = canvas.toDataURL('image/png');
+                                link.click();
+                                message.success('Barkod indirildi!');
+                            }
+                        }}
+                    >
+                        PNG Olarak İndir
+                    </Button>
+                ]}
+                centered
+                width={400}
+            >
+                <div style={{ textAlign: 'center', padding: 24 }}>
+                    {/* Barkod görseli */}
+                    <Barcode
+                        value={currentBarcode || ''}
+                        width={2}
+                        height={100}
+                        fontSize={16}
+                        margin={10}
+                    />
+
+                    <Text strong style={{ fontSize: 18, display: 'block', margin: '16px 0' }}>
+                        {currentBarcode}
+                    </Text>
+
+                    <Space>
+                        <Button
+                            type="primary"
+                            onClick={() => {
+                                navigator.clipboard.writeText(currentBarcode);
+                                message.success('Barkod panoya kopyalandı!');
+                            }}
+                        >
+                            Metni Kopyala
+                        </Button>
+                    </Space>
+                </div>
             </Modal>
         </div>
     );

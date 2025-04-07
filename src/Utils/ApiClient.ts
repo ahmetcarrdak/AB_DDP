@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // API'nin ana domaini
-export const domain = "https://ab_ddp_api.railway.internal/api/";
+export const domain = "https://abddpapi-production.up.railway.app/api/";
 
 // Axios instance oluştur
 const apiClient = axios.create({

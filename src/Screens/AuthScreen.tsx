@@ -67,11 +67,11 @@ const AuthScreen: React.FC = () => {
     >
       <Form.Item
         name="taxNumber"
-        rules={[{ required: true, message: 'Lütfen vergi numaranızı girin!' }]}
+        rules={[{ required: true, message: 'Lütfen kullanıcı adı girin!' }]}
       >
         <Input 
           prefix={<UserOutlined />} 
-          placeholder="Vergi Numarası"
+          placeholder="Kullanıcı Adı"
           size="large"
         />
       </Form.Item>
@@ -97,11 +97,6 @@ const AuthScreen: React.FC = () => {
           Giriş Yap
         </Button>
       </Form.Item>
-      {isCompanyLogin && (
-        <Button type="link" onClick={() => setIsLogin(false)} block>
-          Hesabınız yok mu? Kayıt olun
-        </Button>
-      )}
     </Form>
   );
 
@@ -276,21 +271,6 @@ const AuthScreen: React.FC = () => {
         
         {isLogin ? (
           <div>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <Button 
-                type={isCompanyLogin ? "primary" : "default"}
-                onClick={() => setIsCompanyLogin(true)}
-                style={{ marginRight: '10px' }}
-              >
-                Firma Girişi
-              </Button>
-              <Button 
-                type={!isCompanyLogin ? "primary" : "default"}
-                onClick={() => setIsCompanyLogin(false)}
-              >
-                Personel Girişi
-              </Button>
-            </div>
             {isCompanyLogin ? <CompanyLoginForm /> : <PersonelLoginForm />}
           </div>
         ) : (

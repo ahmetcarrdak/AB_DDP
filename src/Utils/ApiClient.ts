@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // API'nin ana domaini
-export const domain = "http://localhost:5262/api/";
+export const domain = "https://ab_ddp_api.railway.internal/api/";
 
 // Axios instance oluştur
 const apiClient = axios.create({

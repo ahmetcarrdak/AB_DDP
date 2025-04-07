@@ -9,7 +9,7 @@ import {FaNetworkWired, FaCogs, FaTools} from "react-icons/fa";
 import {FiDatabase} from "react-icons/fi";
 import {CgController} from "react-icons/cg";
 
-export const domain = "http://localhost:5262/api/";
+export const domain = "https://abddpapi-production.up.railway.app/api/";
 
 export const apiUrl = {
     person: "Person/all",

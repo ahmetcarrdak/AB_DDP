@@ -42,6 +42,7 @@ const AuthScreen: React.FC = () => {
                 ...response.data.user
             };
 
+            console.log(apiUrl, userData);
             login(response.data.token, userData);
             
             toast.success(isLogin ? 'Giriş başarılı!' : 'Kayıt başarılı!');

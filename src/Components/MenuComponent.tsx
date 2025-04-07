@@ -219,7 +219,7 @@ const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisib
                     ))}
                 </div>
                 <div className="menu-footer">
-                    <div className="menu-footer-icons">
+                    <div className="menu-footer-icons" style={{display: "none"}}>
                         <div className="menu-footer-item">
                             <Link to={""}>
                                 <FiTerminal/>

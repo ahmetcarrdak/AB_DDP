@@ -2,7 +2,7 @@
 @import "Root.css";
 @import "App.css";
 @import "Menu.css";
-@import "Header.css";
+@import "Header.scss";
 @import "Home.css";
 @import "Auth.css";
 @import 'datatables.net-dt';

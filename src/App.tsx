@@ -24,6 +24,7 @@ const QualityControlScreen = React.lazy(
     () => import("./Screens/QualityControlScreen")
 );
 const MachineScreen = React.lazy(() => import("./Screens/MachineScreen"));
+const DeletedMachinesScreen = React.lazy(() => import("./Screens/DeletedMachinesScreen"));
 const MachineFaultScreen = React.lazy(
     () => import("./Screens/MachineFaultScreen")
 );
@@ -133,7 +134,7 @@ function AppContent() {
                 if (error.response && error.response.status === 401) {
                     // Eğer auth hatası alırsak, kullanıcıyı /auth sayfasına yönlendir
                     console.log('Auth error, redirecting to /auth');
-                    navigate('/auth', { replace: true });
+                    navigate('/auth', {replace: true});
                 } else {
                     // Diğer hatalar için isterseniz başka işlemler yapabilirsiniz
                     console.error(error);
@@ -342,6 +343,15 @@ function AppContent() {
                             }
                         />
 
+                        <Route
+                            path={"/deleted-machine"}
+                            element={
+                                <ProtectedRoute>
+                                    <DeletedMachinesScreen onToggleMenu={handleToggleMenu}/>
+                                </ProtectedRoute>
+                            }
+                        />
+
                         {/* Machine Fault */}
                         <Route
                             path="/machine-fault"
@@ -394,7 +404,7 @@ function AppContent() {
                                     <ProductionInstructionList onToggleMenu={handleToggleMenu}/>
                                 </ProtectedRoute>
                             }
-                            />
+                        />
 
                         <Route
                             path="/production-tracker"

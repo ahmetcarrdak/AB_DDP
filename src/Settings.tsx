@@ -96,23 +96,23 @@ export const menus = [
         action: "/",
     },
     {
-        id: 2,
+        id: 3,
         title: "Üretim Yönetim",
         icon: icons.siparişYönetim,
         action: "#",
         subMenu: [
-            {id: 2.1, title: "Üretim Talimatları", action: "/production-instructions"},
-            {id: 2.3,  title: "Üretim Durumları", action: "/production-tracker"},
+            {id: 3.1, title: "Üretim Talimatları", action: "/production-instructions"},
+            {id: 3.2, title: "Üretim Durumları", action: "/production-tracker"},
         ],
     },
     {
-        id: 3,
+        id: 2,
         title: "Makine Yönetim",
         icon: icons.makineYönetim,
         action: "#",
         subMenu: [
-            {id: 3.1, title: "Makineleri yönet", action: "/machine"},
-            {id: 3.2, title: "Arızaları Yönet", action: "/machine-fault"},
+            {id: 3.1, title: "Makinele Yönetim", action: "/machine"},
+            {id: 3.2, title: "Silinen Makineler", action: "/deleted-machine"},
         ],
     },
 ]

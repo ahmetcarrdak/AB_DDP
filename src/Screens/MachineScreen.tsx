@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, {useEffect, useState, useRef} from "react";
+import {Link, useNavigate} from "react-router-dom";
 import HeaderComponent from "../Components/HeaderComponent";
 import {
     Table,
@@ -20,7 +20,10 @@ import {
     QRCode,
     Dropdown,
     Badge,
-    Tooltip
+    Tooltip,
+    Popconfirm,
+    Descriptions,
+    Divider
 } from "antd";
 import {
     DownloadOutlined,
@@ -31,20 +34,24 @@ import {
     MoreOutlined,
     FileExcelOutlined,
     FilePdfOutlined,
-    BarcodeOutlined
+    BarcodeOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    EyeOutlined
 } from "@ant-design/icons";
-import { apiUrl } from "../Settings";
-import type { ColumnsType } from "antd/es/table";
+import {apiUrl} from "../Settings";
+import type {ColumnsType} from "antd/es/table";
 import moment from "moment";
-import { Dayjs } from "dayjs";
+import {Dayjs} from "dayjs";
 import apiClient from "../Utils/ApiClient";
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
+import {jsPDF} from 'jspdf';
 import html2canvas from 'html2canvas';
 import Barcode from "react-barcode";
+import 'antd/dist/reset.css';
 
-const { Title, Text } = Typography;
-const { Option } = Select;
+const {Title, Text} = Typography;
+const {Option} = Select;
 
 interface MachineRecord {
     id: number;
@@ -57,9 +64,17 @@ interface MachineRecord {
     totalFault: number;
     purchaseDate: string;
     isOperational: boolean;
+    purchasePrice: number;
+    description: string;
+    dimensions: string;
+    weight: string;
+    powerConsumption: string;
+    warrantyPeriod: number;
+    lastMaintenanceDate: string;
+    nextMaintenanceDate: string;
 }
 
-const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu }) => {
+const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({onToggleMenu}) => {
     // State'ler
     const [data, setData] = useState<MachineRecord[]>([]);
     const [loading, setLoading] = useState(true);
@@ -75,8 +90,13 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
     const [currentBarcode, setCurrentBarcode] = useState("");
     const [qrUrl, setQrUrl] = useState("");
     const [selectedFormat, setSelectedFormat] = useState<string>("png");
+    const [machineDetailVisible, setMachineDetailVisible] = useState(false);
+    const [selectedMachine, setSelectedMachine] = useState<MachineRecord | null>(null);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const tableRef = useRef<HTMLDivElement>(null);
     const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+    const navigate = useNavigate();
+    const [deletedConfirm, setDeletedCondfirm] = useState(false);
 
     // Veri çekme
     const fetchData = async () => {
@@ -95,6 +115,21 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Makine silme fonksiyonu
+    const handleDelete = async (id: number) => {
+        try {
+            setDeleteLoading(true);
+            await apiClient.put(`${apiUrl.machine}/Deleted/${id}`);
+            message.success("Makine başarıyla silindi");
+            fetchData();
+        } catch (error) {
+            message.error("Makine silinirken hata oluştu");
+            console.error("Error:", error);
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
 
     // QR Code işlemleri
     const generateQRCode = (machineId: number) => {
@@ -126,7 +161,26 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
 
     // Export işlemleri
     const exportToExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filteredData);
+        const exportData = filteredData.map(item => ({
+            'Makine Adı': item.name,
+            'Barkod': item.barcode,
+            'Seri No': item.serialNumber,
+            'Konum': item.location,
+            'Üretici': item.manufacturer,
+            'Model': item.model,
+            'Arıza Sayısı': item.totalFault,
+            'Satın Alma Tarihi': moment(item.purchaseDate).format("DD.MM.YYYY"),
+            'Durum': item.isOperational ? "Aktif" : "Pasif",
+            'Satın Alma Fiyatı': `${item.purchasePrice} ₺`,
+            'Ağırlık': item.weight,
+            'Boyutlar': item.dimensions,
+            'Güç Tüketimi': item.powerConsumption,
+            'Garanti Süresi': `${item.warrantyPeriod} ay`,
+            'Son Bakım Tarihi': item.lastMaintenanceDate ? moment(item.lastMaintenanceDate).format("DD.MM.YYYY") : "-",
+            'Sonraki Bakım Tarihi': item.nextMaintenanceDate ? moment(item.nextMaintenanceDate).format("DD.MM.YYYY") : "-"
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Makineler");
         XLSX.writeFile(workbook, "makineler.xlsx");
@@ -137,16 +191,22 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
         if (!tableRef.current) return;
 
         try {
-            message.loading({ content: 'PDF hazırlanıyor...', key: 'pdf' });
+            message.loading({content: 'PDF hazırlanıyor...', key: 'pdf'});
             const canvas = await html2canvas(tableRef.current);
             const pdf = new jsPDF('landscape');
             pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, 280, 150);
             pdf.save('makineler.pdf');
-            message.success({ content: 'PDF indirildi', key: 'pdf' });
+            message.success({content: 'PDF indirildi', key: 'pdf'});
         } catch (error) {
-            message.error({ content: 'PDF oluşturulamadı', key: 'pdf' });
+            message.error({content: 'PDF oluşturulamadı', key: 'pdf'});
             console.error(error);
         }
+    };
+
+    // Makine detayını göster
+    const showMachineDetails = (machine: MachineRecord) => {
+        setSelectedMachine(machine);
+        setMachineDetailVisible(true);
     };
 
     // Filtreleme
@@ -157,11 +217,10 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
         const matchesLocation = !filters.location || record.location === filters.location;
         const matchesManufacturer = !filters.manufacturer || record.manufacturer === filters.manufacturer;
         const matchesOperational = filters.isOperational === null || record.isOperational === filters.isOperational;
-        // Filtreleme kısmında tarih karşılaştırmasını güncelleyin:
         const matchesDateRange = !filters.dateRange || !filters.dateRange[0] || !filters.dateRange[1] ||
             moment(record.purchaseDate).isBetween(
-                filters.dateRange[0]?.toDate(), // Dayjs -> Date çevrimi
-                filters.dateRange[1]?.toDate(), // Dayjs -> Date çevrimi
+                filters.dateRange[0]?.toDate(),
+                filters.dateRange[1]?.toDate(),
                 'day',
                 '[]'
             );
@@ -190,7 +249,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                         setCurrentBarcode(barcode);
                         setBarcodeModalVisible(true);
                     }}
-                    icon={<BarcodeOutlined />}
+                    icon={<BarcodeOutlined/>}
                 >
                     {barcode}
                 </Button>
@@ -229,7 +288,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                 <Badge
                     count={count}
                     showZero
-                    style={{ backgroundColor: count > 0 ? '#ff4d4f' : '#52c41a' }}
+                    style={{backgroundColor: count > 0 ? '#ff4d4f' : '#52c41a'}}
                 />
             ),
             width: 100,
@@ -256,47 +315,63 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
             title: "İşlemler",
             key: "actions",
             fixed: 'right',
-            width: 120,
+            width: 150,
             render: (_, record) => (
-                <Dropdown
-                    menu={{
-                        items: [
-                            {
-                                key: 'edit',
-                                label: (
-                                    <Link to={`/machine-update-machine/${record.id}`}>
-                                        Düzenle
-                                    </Link>
-                                ),
-                                icon: <PlusOutlined />,
-                            },
-                            {
-                                key: 'qrcode',
-                                label: 'QR Kodu',
-                                icon: <QrcodeOutlined />,
-                                onClick: () => generateQRCode(record.id),
-                            },
-                        ],
-                    }}
-                >
-                    <Button icon={<MoreOutlined />} />
-                </Dropdown>
+                <Space>
+                    <Tooltip title="Detaylar">
+                        <Button
+                            icon={<EyeOutlined/>}
+                            onClick={() => showMachineDetails(record)}
+                        />
+                    </Tooltip>
+
+                    <Dropdown
+                        menu={{
+                            items: [
+                                {
+                                    key: 'edit',
+                                    label: 'Düzenle',
+                                    icon: <EditOutlined/>,
+                                    onClick: () => navigate(`/machine-update-machine/${record.id}`)
+                                },
+                                {
+                                    key: 'qrcode',
+                                    label: 'QR Kodu',
+                                    icon: <QrcodeOutlined/>,
+                                    onClick: () => generateQRCode(record.id),
+                                },
+                            ]
+                        }}
+                    >
+                        <Button icon={<MoreOutlined/>}/>
+                    </Dropdown>
+                    <Tooltip title="Sil">
+                        <Button
+                            icon={<DeleteOutlined/>}
+                            danger
+                            onClick={() => {
+                                setSelectedMachine(record);
+                                setDeletedCondfirm(true);
+                            }}
+                        />
+                    </Tooltip>
+                </Space>
             ),
         },
     ];
 
     return (
-        <div style={{ background: '#f0f2f5', minHeight: '100vh' }}>
-            <HeaderComponent onToggleMenu={onToggleMenu} />
+        <div style={{background: '#f0f2f5', minHeight: '100vh'}}>
+            <HeaderComponent onToggleMenu={onToggleMenu}/>
 
             <Card
-                style={{ margin: 16, borderRadius: 8 }}
-                bodyStyle={{ padding: 0 }}
+                style={{margin: 16, borderRadius: 8}}
+                bodyStyle={{padding: 0}}
             >
-                <div style={{ padding: 24 }}>
+                <div style={{padding: 24}}>
                     <Row gutter={[16, 16]} justify="space-between" align="middle">
                         <Col>
-                            <Title level={4} style={{ margin: 0 }}>Makine Listesi</Title>
+                            <Title level={4} style={{margin: 0}}>Makine Listesi</Title>
                         </Col>
 
                         <Col>
@@ -305,18 +380,18 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                                     placeholder="Ara..."
                                     allowClear
                                     onSearch={setSearchText}
-                                    style={{ width: 200 }}
+                                    style={{width: 200}}
                                 />
 
                                 <Tooltip title="Yenile">
                                     <Button
-                                        icon={<ReloadOutlined />}
+                                        icon={<ReloadOutlined/>}
                                         onClick={fetchData}
                                     />
                                 </Tooltip>
 
                                 <Button
-                                    icon={<FilterOutlined />}
+                                    icon={<FilterOutlined/>}
                                     onClick={() => setFilterDrawerVisible(true)}
                                 >
                                     Filtrele
@@ -328,23 +403,23 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                                             {
                                                 key: 'excel',
                                                 label: 'Excel',
-                                                icon: <FileExcelOutlined />,
+                                                icon: <FileExcelOutlined/>,
                                                 onClick: exportToExcel
                                             },
                                             {
                                                 key: 'pdf',
                                                 label: 'PDF',
-                                                icon: <FilePdfOutlined />,
+                                                icon: <FilePdfOutlined/>,
                                                 onClick: exportToPDF
                                             }
                                         ]
                                     }}
                                 >
-                                    <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
+                                    <Button icon={<DownloadOutlined/>}>Dışa Aktar</Button>
                                 </Dropdown>
 
                                 <Link to="/machine-create">
-                                    <Button type="primary" icon={<PlusOutlined />}>
+                                    <Button type="primary" icon={<PlusOutlined/>}>
                                         Yeni Makine
                                     </Button>
                                 </Link>
@@ -359,7 +434,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                         dataSource={filteredData}
                         loading={loading}
                         rowKey="id"
-                        scroll={{ x: 1300 }}
+                        scroll={{x: 1300}}
                         pagination={{
                             showSizeChanger: true,
                             showQuickJumper: true,
@@ -416,7 +491,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
 
                     <Form.Item label="Tarih Aralığı">
                         <DatePicker.RangePicker
-                            style={{ width: '100%' }}
+                            style={{width: '100%'}}
                             onChange={(dates) => setFilters({
                                 ...filters,
                                 dateRange: dates as [Dayjs | null, Dayjs | null] | null
@@ -425,6 +500,40 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                     </Form.Item>
                 </Form>
             </Drawer>
+
+
+            {/*  Machine Deleted Modal */}
+            <Modal
+                title="Makine Silme Onayı"
+                open={deletedConfirm}
+                onCancel={() => setDeletedCondfirm(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setDeletedCondfirm(false)}>
+                        İptal
+                    </Button>,
+                    <Button
+                        key="delete"
+                        type="primary"
+                        danger
+                        loading={deleteLoading}
+                        onClick={() => {
+                            if (selectedMachine) {
+                                handleDelete(selectedMachine.id);
+                                setDeletedCondfirm(false);
+                            }
+                        }}
+                        icon={<DeleteOutlined />}
+                    >
+                        Sil
+                    </Button>
+                ]}
+            >
+                <Text>
+                    <strong>{selectedMachine?.name}</strong> isimli makineyi silmek istediğinize emin misiniz?
+                    <br />
+                    Bu işlem silinen makineler sayfasından geri alabilirsiniz!
+                </Text>
+            </Modal>
 
             {/* QR Code Modal */}
             <Modal
@@ -439,24 +548,24 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                         key="download"
                         type="primary"
                         onClick={downloadQRCode}
-                        icon={<DownloadOutlined />}
+                        icon={<DownloadOutlined/>}
                     >
                         İndir ({selectedFormat.toUpperCase()})
                     </Button>
                 ]}
             >
-                <div style={{ textAlign: 'center' }}>
+                <div style={{textAlign: 'center'}}>
                     <QRCode
                         value={qrUrl}
                         size={200}
-                        style={{ marginBottom: 16 }}
+                        style={{marginBottom: 16}}
                     />
                     <Text copyable>{qrUrl}</Text>
-                    <Form.Item label="Format" style={{ marginTop: 16 }}>
+                    <Form.Item label="Format" style={{marginTop: 16}}>
                         <Select
                             value={selectedFormat}
                             onChange={setSelectedFormat}
-                            style={{ width: 120 }}
+                            style={{width: 120}}
                         >
                             <Option value="png">PNG</Option>
                             <Option value="jpeg">JPEG</Option>
@@ -477,7 +586,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                     <Button
                         key="download"
                         type="primary"
-                        icon={<DownloadOutlined />}
+                        icon={<DownloadOutlined/>}
                         onClick={() => {
                             const canvas = document.getElementById('barcode-canvas') as HTMLCanvasElement;
                             if (canvas) {
@@ -495,8 +604,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                 centered
                 width={400}
             >
-                <div style={{ textAlign: 'center', padding: 24 }}>
-                    {/* Barkod görseli */}
+                <div style={{textAlign: 'center', padding: 24}}>
                     <Barcode
                         value={currentBarcode || ''}
                         width={2}
@@ -505,7 +613,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                         margin={10}
                     />
 
-                    <Text strong style={{ fontSize: 18, display: 'block', margin: '16px 0' }}>
+                    <Text strong style={{fontSize: 18, display: 'block', margin: '16px 0'}}>
                         {currentBarcode}
                     </Text>
 
@@ -522,6 +630,101 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggleMenu })
                     </Space>
                 </div>
             </Modal>
+
+            {/* Makine Detay Drawer */}
+            <Drawer
+                title={`Makine Detayları: ${selectedMachine?.name || ''}`}
+                placement="right"
+                width={600}
+                onClose={() => setMachineDetailVisible(false)}
+                open={machineDetailVisible}
+                extra={
+                    <Space>
+                        <Button
+                            type="primary"
+                            onClick={() => {
+                                if (selectedMachine) {
+                                    navigate(`/machine-update-machine/${selectedMachine.id}`);
+                                }
+                            }}
+                            icon={<EditOutlined/>}
+                        >
+                            Düzenle
+                        </Button>
+                        <Button onClick={() => setMachineDetailVisible(false)}>Kapat</Button>
+                    </Space>
+                }
+            >
+                {selectedMachine && (
+                    <div>
+                        <Descriptions bordered column={1}>
+                            <Descriptions.Item label="Makine Adı">{selectedMachine.name}</Descriptions.Item>
+                            <Descriptions.Item label="Barkod">
+                                <Button
+                                    type="link"
+                                    onClick={() => {
+                                        setCurrentBarcode(selectedMachine.barcode);
+                                        setBarcodeModalVisible(true);
+                                    }}
+                                    icon={<BarcodeOutlined/>}
+                                >
+                                    {selectedMachine.barcode}
+                                </Button>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Seri Numarası">{selectedMachine.serialNumber}</Descriptions.Item>
+                            <Descriptions.Item label="Konum">{selectedMachine.location}</Descriptions.Item>
+                            <Descriptions.Item label="Üretici">{selectedMachine.manufacturer}</Descriptions.Item>
+                            <Descriptions.Item label="Model">{selectedMachine.model}</Descriptions.Item>
+                            <Descriptions.Item label="Arıza Sayısı">
+                                <Badge
+                                    count={selectedMachine.totalFault}
+                                    showZero
+                                    style={{backgroundColor: selectedMachine.totalFault > 0 ? '#ff4d4f' : '#52c41a'}}
+                                />
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Durum">
+                                <Tag color={selectedMachine.isOperational ? "green" : "red"}>
+                                    {selectedMachine.isOperational ? "Aktif" : "Pasif"}
+                                </Tag>
+                            </Descriptions.Item>
+                        </Descriptions>
+
+                        <Divider orientation="left">Teknik Özellikler</Divider>
+                        <Descriptions bordered column={1}>
+                            <Descriptions.Item label="Satın Alma Tarihi">
+                                {moment(selectedMachine.purchaseDate).format("DD.MM.YYYY")}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Satın Alma Fiyatı">
+                                {selectedMachine.purchasePrice} ₺
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Ağırlık">{selectedMachine.weight}</Descriptions.Item>
+                            <Descriptions.Item label="Boyutlar">{selectedMachine.dimensions}</Descriptions.Item>
+                            <Descriptions.Item
+                                label="Güç Tüketimi">{selectedMachine.powerConsumption}</Descriptions.Item>
+                            <Descriptions.Item label="Garanti Süresi">
+                                {selectedMachine.warrantyPeriod} ay
+                            </Descriptions.Item>
+                        </Descriptions>
+
+                        <Divider orientation="left">Bakım Bilgileri</Divider>
+                        <Descriptions bordered column={1}>
+                            <Descriptions.Item label="Son Bakım Tarihi">
+                                {selectedMachine.lastMaintenanceDate ?
+                                    moment(selectedMachine.lastMaintenanceDate).format("DD.MM.YYYY") : "-"}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Sonraki Bakım Tarihi">
+                                {selectedMachine.nextMaintenanceDate ?
+                                    moment(selectedMachine.nextMaintenanceDate).format("DD.MM.YYYY") : "-"}
+                            </Descriptions.Item>
+                        </Descriptions>
+
+                        <Divider orientation="left">Açıklama</Divider>
+                        <Card>
+                            {selectedMachine.description || "Açıklama bulunmamaktadır."}
+                        </Card>
+                    </div>
+                )}
+            </Drawer>
         </div>
     );
 };

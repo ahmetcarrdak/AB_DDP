@@ -133,11 +133,11 @@ function AppContent() {
             } catch (error: any) {
                 if (error.response && error.response.status === 401) {
                     // Eğer auth hatası alırsak, kullanıcıyı /auth sayfasına yönlendir
-                    console.log('Auth error, redirecting to /auth');
+                    //console.log('Auth error, redirecting to /auth');
                     navigate('/auth', {replace: true});
                 } else {
                     // Diğer hatalar için isterseniz başka işlemler yapabilirsiniz
-                    console.error(error);
+                    //console.error(error);
                 }
             } finally {
                 setLoading(false);

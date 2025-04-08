@@ -30,6 +30,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import moment from "moment";
+import HeaderComponent from "../Components/HeaderComponent";
 
 const { Title, Text } = Typography;
 
@@ -218,6 +219,9 @@ const DeletedMachinesScreen: React.FC<{ onToggleMenu: () => void }> = ({ onToggl
 
     return (
         <div style={{ background: '#f0f2f5', minHeight: '100vh' }}>
+
+            <HeaderComponent onToggleMenu={onToggleMenu}/>
+
             <Card style={{ margin: 16, borderRadius: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <Title level={4} style={{ margin: 0 }}>

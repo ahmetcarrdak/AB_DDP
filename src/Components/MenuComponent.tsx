@@ -149,17 +149,17 @@ const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisib
                         <span className="menu-widget-badge">Panel</span>
                     </Link>
 
-                    <Link to={"/store"} className="menu-widget">
+                    <Link to={"/production-tracker"} className="menu-widget">
                         <PiTrendUpThin className="menu-widget-icon"/>
                         <span className="menu-widget-badge">Durumlar</span>
                     </Link>
 
-                    <Link to={"/order"} className="menu-widget">
+                    <Link to={"/production-instructions"} className="menu-widget">
                         <MdManageSearch className="menu-widget-icon"/>
                         <span className="menu-widget-badge">Talimatlar</span>
                     </Link>
 
-                    <Link to={"/person"} className="menu-widget">
+                    <Link to={"/machine"} className="menu-widget">
                         <BiChip className="menu-widget-icon"/>
                         <span className="menu-widget-badge">Makineler</span>
                     </Link>

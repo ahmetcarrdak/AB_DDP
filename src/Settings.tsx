@@ -111,7 +111,7 @@ export const menus = [
         icon: icons.makineYönetim,
         action: "#",
         subMenu: [
-            {id: 3.1, title: "Makinele Yönetim", action: "/machine"},
+            {id: 3.1, title: "Makine Yönetim", action: "/machine"},
             {id: 3.2, title: "Silinen Makineler", action: "/deleted-machine"},
         ],
     },

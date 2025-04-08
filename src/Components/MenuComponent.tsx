@@ -253,15 +253,15 @@ const MenuComponent: React.FC<MenuComponentProps> = memo(({ onMenuClick, isVisib
                         </div>
                     </div>
                     <div className="menu-profile">
-                        <div className={"menu-footer-profile-left"} onClick={handleProfileMenu}>
+                        <div className={"menu-footer-profile-left"}>
                             <img
                                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqSTTueKdjM4z7B0u5Gqx5UFUZjqtL3_8QhQ&s"
                                 alt=""
                                 className={"menu-profile-photo"}
                             />
                             <div className={"menu-profile-left-label"}>
-                                <div>Jhon Doe</div>
-                                <div>Human resources</div>
+                                <div>Bussiness Track</div>
+                                <div>Admin Person</div>
                             </div>
                         </div>
                         <RiLogoutCircleRLine

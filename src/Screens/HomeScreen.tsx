@@ -267,7 +267,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabCh
                                         <List.Item>
                                             <div>
                                                 <strong>{item.title}</strong>
-                                                <div>{item.insertDate}</div>
+                                                <div>{new Date(item.insertDate).toLocaleString('tr-TR')}</div>
                                             </div>
                                         </List.Item>
                                     )}

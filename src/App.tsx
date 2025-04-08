@@ -125,6 +125,13 @@ function AppContent() {
     };
 
     useEffect(() => {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && isMenuVisible) {
+            handleToggleMenu();
+        }
+    }, [location.pathname]);
+
+    useEffect(() => {
         // API isteği yapılacak
         const fetchData = async () => {
             try {

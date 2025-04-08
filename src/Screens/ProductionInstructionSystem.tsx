@@ -400,7 +400,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                             Kapat
                         </Button>
                     ]}
-                    width={400}
+                    width={600}
                 >
                     <div className="barcode-container" style={{ textAlign: 'center', margin: '20px 0' }}>
                         <Barcode

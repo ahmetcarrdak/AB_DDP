@@ -49,6 +49,7 @@ import {jsPDF} from 'jspdf';
 import html2canvas from 'html2canvas';
 import Barcode from "react-barcode";
 import 'antd/dist/reset.css';
+import * as htmlToImage from "html-to-image";
 
 const {Title, Text} = Typography;
 const {Option} = Select;
@@ -182,6 +183,33 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({onToggleMenu}) =
         }
     };
 
+    // Barkod indirme fonksiyonu
+    const downloadBarcode = async () => {
+        try {
+            const barcodeElement = document.querySelector('.barcode-container svg') as HTMLElement;
+
+            if (!barcodeElement) {
+                message.error("Barkod elementi bulunamadı!");
+                return;
+            }
+
+            // SVG'yi PNG'ye dönüştür
+            const dataUrl = await htmlToImage.toPng(barcodeElement);
+
+            // İndirme işlemi
+            const link = document.createElement('a');
+            link.download = `barcode_${currentBarcode}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            message.success('Barkod başarıyla indirildi!');
+        } catch (error) {
+            console.error('Barkod indirme hatası:', error);
+            message.error('Barkod indirilirken bir hata oluştu!');
+        }
+    };
 
     // Export işlemleri
     const exportToExcel = () => {
@@ -546,7 +574,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({onToggleMenu}) =
                                 setDeletedCondfirm(false);
                             }
                         }}
-                        icon={<DeleteOutlined />}
+                        icon={<DeleteOutlined/>}
                     >
                         Sil
                     </Button>
@@ -554,7 +582,7 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({onToggleMenu}) =
             >
                 <Text>
                     <strong>{selectedMachine?.name}</strong> isimli makineyi silmek istediğinize emin misiniz?
-                    <br />
+                    <br/>
                     Bu işlem silinen makineler sayfasından geri alabilirsiniz!
                 </Text>
             </Modal>
@@ -611,48 +639,15 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({onToggleMenu}) =
                         key="download"
                         type="primary"
                         icon={<DownloadOutlined/>}
-                        onClick={() => {
-                            const svgElement = document.querySelector('svg'); // veya daha spesifik id verilebilir
-                            if (!svgElement) {
-                                message.error("SVG barkod bulunamadı!");
-                                return;
-                            }
-
-                            const serializer = new XMLSerializer();
-                            const svgString = serializer.serializeToString(svgElement);
-
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            const img = new Image();
-
-                            img.onload = () => {
-                                canvas.width = img.width;
-                                canvas.height = img.height;
-                                ctx?.drawImage(img, 0, 0);
-                                const pngFile = canvas.toDataURL('image/png');
-
-                                const link = document.createElement('a');
-                                link.download = `barkod-${currentBarcode}.png`;
-                                link.href = pngFile;
-                                link.click();
-
-                                message.success('Barkod indirildi!');
-                            };
-
-                            img.onerror = () => {
-                                message.error("SVG'den PNG oluşturulamadı!");
-                            };
-
-                            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-                        }}
+                        onClick={downloadBarcode}
                     >
                         PNG Olarak İndir
                     </Button>
                 ]}
                 centered
-                width={400}
+                width={600}
             >
-                <div style={{textAlign: 'center', padding: 24}}>
+                <div style={{textAlign: 'center', padding: 24}} className={"barcode-container"}>
                     <Barcode
                         value={currentBarcode || ''}
                         width={2}

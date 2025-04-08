@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import {Card, List} from "antd";
+import React, { useEffect, useState } from "react";
+import { Card, List, message } from "antd";
 import {
     BarChart,
     Bar,
@@ -13,7 +13,7 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import HeaderComponent from "../Components/HeaderComponent";
-import {apiUrl} from "../Settings";
+import { apiUrl } from "../Settings";
 import apiClient from "../Utils/ApiClient";
 import ProductionStatus from "../Components/ProductionStatus";
 
@@ -25,33 +25,117 @@ interface HomeScreenProps {
     onTabChange: (tabId: number) => void;
 }
 
+// Interfaces
+interface Machine {
+    id: number;
+    productionInstructionId: number;
+    machineId: number;
+    line: number;
+    entryDate: string;
+    exitDate: string;
+    status: any | number;
+    machine: {
+        id: number;
+        companyId: number;
+        name: string;
+        model: string;
+        serialNumber: string;
+        manufacturer: string;
+        purchaseDate: string;
+        purchasePrice: number;
+        lastMaintenanceDate: string;
+        nextMaintenanceDate: string;
+        description: string;
+        isActive: boolean;
+        location: string;
+        warrantyPeriod: number;
+        powerConsumption: string;
+        dimensions: string;
+        weight: string;
+        company: any | null;
+        totalFault: number;
+        isOperational: boolean;
+        createdAt: string;
+        updatedAt: string;
+    };
+}
+
+interface Store {
+    id: number;
+    productionInstructionId: number;
+    name: string;
+    barkod: string;
+}
+
+interface ProductToSeans {
+    id: number;
+    productId: number;
+    count: number;
+    barcode: string;
+    machineId: number;
+    batchSize: number;
+    isCompleted: boolean;
+    status: number;
+}
+
+interface ProductionInstruction {
+    id: number;
+    companyId: number;
+    title: string;
+    machineId: any | number;
+    barcode: string;
+    description: string;
+    insertDate: string;
+    complatedDate: string;
+    deletedDate: string;
+    isComplated: number;
+    isDeleted: number;
+    count: number;
+    productionToMachines: Machine[];
+    productionStores: Store[];
+    productToSeans: ProductToSeans[];
+}
+
 const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabChange}) => {
     const [orderData, setOrderData] = useState<{ name: string; count: number }[]>([]);
     const [workstationJobs, setWorkstationJobs] = useState<{ name: string; jobs: number }[]>([]);
     const [machineStatus, setMachineStatus] = useState<{ name: string; status: string }[]>([]);
-    const [recentInstructions, setRecentInstructions] = useState<{ id: number; name: string; date: string }[]>([]);
+    const [recentInstructions, setRecentInstructions] = useState<{ id: number; title: string; insertDate: string }[]>([]);
     const [productionStats, setProductionStats] = useState<{ day: string; completed: number }[]>([]);
 
     const fetchData = async () => {
         try {
-            const [
-                productionInsRes,
-                machinesRes,
-            ] = await Promise.allSettled([
+            const [productionInsRes, machinesRes] = await Promise.allSettled([
                 apiClient.get(apiUrl.ProductionInsList),
                 apiClient.get(apiUrl.machine),
             ]);
 
             if (productionInsRes.status === "fulfilled") {
-                const data = productionInsRes.value.data;
+                const data = productionInsRes.value.data.filter((item: any) => item.isDeleted === 0);
 
-                const completedOrders = data.filter((item: any) => item.isComplated === 1).length;
-                const ongoingOrders = data.filter((item: any) => item.machineId > 0 && item.isComplated === 0).length;
-                const notStart = data.filter((item: any) => item.machineId === 0).length;
+                let completed = 0;
+                let ongoing = 0;
+                let notStarted = 0;
+
+                data.forEach((item: any) => {
+                    const seansList = item.productToSeans || [];
+                    const totalCompleted = seansList
+                        .filter((s: any) => s.isCompleted)
+                        .reduce((sum: number, s: any) => sum + s.count, 0);
+
+                    if (totalCompleted === 0) {
+                        notStarted++;
+                    } else if (totalCompleted >= item.count) {
+                        completed++;
+                    } else {
+                        ongoing++;
+                    }
+                });
+
                 setOrderData([
-                    {name: "Tamamlandı", count: completedOrders},
-                    {name: "Devam Ediyor", count: ongoingOrders},
-                    {name: "Başlamadı", count: notStart},
+                    { name: "Tamamlandı", count: completed },
+                    { name: "Devam Ediyor", count: ongoing },
+                    { name: "Başlamadı", count: notStarted },
                 ]);
 
                 const machineJobCounts = data.reduce((acc: { [key: string]: number }, item: any) => {
@@ -66,6 +150,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabCh
                     Object.entries(machineJobCounts).map(([name, jobs]) => ({
                         name,
                         jobs: jobs as number,
+                    }))
+                );
+
+                setRecentInstructions(
+                    data.slice(0, 5).map((item: any) => ({
+                        id: item.id,
+                        title: item.title,
+                        insertDate: item.insertDate,
                     }))
                 );
             }
@@ -174,8 +266,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabCh
                                     renderItem={(item) => (
                                         <List.Item>
                                             <div>
-                                                <strong>{item.name}</strong>
-                                                <div>{item.date}</div>
+                                                <strong>{item.title}</strong>
+                                                <div>{item.insertDate}</div>
                                             </div>
                                         </List.Item>
                                     )}

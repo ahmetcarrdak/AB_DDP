@@ -140,24 +140,48 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({onToggleMenu}) =
 
     const downloadQRCode = () => {
         try {
-            const canvas = document.querySelector('.ant-qrcode canvas') as HTMLCanvasElement;
-            if (!canvas) {
+            const originalCanvas = document.querySelector('.ant-qrcode canvas') as HTMLCanvasElement;
+            if (!originalCanvas) {
                 message.error("QR kodu bulunamadı!");
                 return;
             }
 
+            const width = originalCanvas.width;
+            const height = originalCanvas.height;
+
+            // Yeni canvas oluştur ve beyaz arka plan uygula
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                message.error("Canvas işlemi başarısız");
+                return;
+            }
+
+            // Arka planı beyaz boya
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, width, height);
+
+            // Orijinal canvas'ı yeni canvas'a çiz
+            ctx.drawImage(originalCanvas, 0, 0);
+
+            // Bağlantıyı oluştur ve indir
             const link = document.createElement('a');
             link.download = `qr-code.${selectedFormat}`;
             link.href = selectedFormat === 'png'
-                ? canvas.toDataURL('image/png')
-                : canvas.toDataURL('image/jpeg', 0.92);
+                ? originalCanvas.toDataURL('image/png')
+                : canvas.toDataURL('image/jpeg', 0.92); // bu yeni canvas
             link.click();
+
             message.success("QR kodu indirildi");
         } catch (error) {
             message.error("QR kodu indirilemedi");
             console.error(error);
         }
     };
+
 
     // Export işlemleri
     const exportToExcel = () => {
@@ -588,14 +612,38 @@ const MachineScreen: React.FC<{ onToggleMenu: () => void }> = ({onToggleMenu}) =
                         type="primary"
                         icon={<DownloadOutlined/>}
                         onClick={() => {
-                            const canvas = document.getElementById('barcode-canvas') as HTMLCanvasElement;
-                            if (canvas) {
+                            const svgElement = document.querySelector('svg'); // veya daha spesifik id verilebilir
+                            if (!svgElement) {
+                                message.error("SVG barkod bulunamadı!");
+                                return;
+                            }
+
+                            const serializer = new XMLSerializer();
+                            const svgString = serializer.serializeToString(svgElement);
+
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            const img = new Image();
+
+                            img.onload = () => {
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                ctx?.drawImage(img, 0, 0);
+                                const pngFile = canvas.toDataURL('image/png');
+
                                 const link = document.createElement('a');
                                 link.download = `barkod-${currentBarcode}.png`;
-                                link.href = canvas.toDataURL('image/png');
+                                link.href = pngFile;
                                 link.click();
+
                                 message.success('Barkod indirildi!');
-                            }
+                            };
+
+                            img.onerror = () => {
+                                message.error("SVG'den PNG oluşturulamadı!");
+                            };
+
+                            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
                         }}
                     >
                         PNG Olarak İndir

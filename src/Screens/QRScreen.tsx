@@ -330,7 +330,7 @@ function QRScreen() {
                             Detayları Göster
                         </Button>
                     </Col>
-                    <Row gutter={16} style={{marginTop: 16}}>
+                    <Row gutter={16}>
                         <Col span={12}>
                             <Button
                                 type="primary"

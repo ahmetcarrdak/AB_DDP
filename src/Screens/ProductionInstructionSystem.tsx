@@ -275,22 +275,29 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
             title: 'Durum',
             key: 'status',
             render: (_, record) => {
-                const totalCompleted = record.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0;
-
-                if (record.machineId === null || record.machineId < 1) {
+                // Eğer hiç makine atanmamışsa
+                if ( record.productionToMachines?.every(m => m.status === 0)) {
                     return <Tag color="red">Henüz Başlanmadı</Tag>;
                 }
 
-                // Tüm makinelerden çıkış yapılmışsa (isComplated = 1)
-                if (record.isComplated === 1) {
-                    return <Tag color="green">Tamamlandı ({totalCompleted}/{record.count})</Tag>;
+                // Tüm makinelerin durumu 2 ise (Tamamlandı)
+                const allMachinesCompleted = record.productionToMachines?.every(m => m.status === 2);
+                if (allMachinesCompleted) {
+                    return <Tag color="green">Tamamlandı</Tag>;
                 }
 
-                return (
-                    <Tag color="blue">
-                        Devam Ediyor ({totalCompleted}/{record.count})
-                    </Tag>
-                );
+                // En az bir makinenin durumu 0'dan farklı ise (Devam Ediyor)
+                const anyMachineInProgress = record.productionToMachines?.some(m => m.status !== 0);
+                if (anyMachineInProgress) {
+                    return (
+                        <Tag color="blue">
+                            Devam Ediyor
+                        </Tag>
+                    );
+                }
+
+                // Diğer durumlar (Henüz başlanmamış)
+                return <Tag color="red">Henüz Başlanmadı</Tag>;
             },
             filters: [
                 {text: 'Tamamlandı', value: 'completed'},
@@ -298,12 +305,19 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
                 {text: 'Henüz Başlanmadı', value: 'not_started'}
             ],
             onFilter: (value, record) => {
-                const totalCompleted = record.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0;
-
-                if (value === 'not_started') return totalCompleted === 0;
-                if (value === 'completed') return totalCompleted >= record.count;
-                return totalCompleted > 0 && totalCompleted < record.count;
-            },
+                if (value === 'completed') {
+                    return record.productionToMachines?.every(m => m.status === 2);
+                }
+                if (value === 'ongoing') {
+                    return record.productionToMachines?.some(m => m.status !== 0) &&
+                        !record.productionToMachines?.every(m => m.status === 2);
+                }
+                if (value === 'not_started') {
+                    return record.machineId === null || record.machineId < 1 ||
+                        record.productionToMachines?.every(m => m.status === 0);
+                }
+                return true;
+            }
         },
         {
             title: 'İşlemler',
@@ -433,30 +447,26 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
 
                                     <Descriptions.Item label="Durum">
                                         {(() => {
-                                            // Toplam tamamlanan adet
-                                            const totalCompleted = selectedRecord.productToSeans?.filter((s: ProductToSeans) => s.isCompleted)
-                                                .reduce((sum: number, s: ProductToSeans) => sum + s.count, 0) || 0;
-
-                                            // Hiç işlem yapılmamışsa (makine ataması yok veya seans yok)
-                                            if (!selectedRecord.productionToMachines?.length || !selectedRecord.productToSeans?.length) {
+                                            // Eğer hiç makine atanmamışsa veya tüm makinelerin status'u 0 ise
+                                            if (!selectedRecord.productionToMachines?.length ||
+                                                selectedRecord.productionToMachines.every(m => m.status === 0)) {
                                                 return <Tag color="red">Henüz Başlanmadı</Tag>;
                                             }
 
-                                            // Tüm makinelerden çıkış yapılmışsa
-                                            const allMachinesExited = selectedRecord.productionToMachines.every((machine: Machine) =>
-                                                selectedRecord.productToSeans.some((s: ProductToSeans) =>
-                                                    s.machineId === machine.machineId && s.status === 2
-                                                )
-                                            );
-
-                                            if (allMachinesExited) {
-                                                return <Tag color="green">Tamamlandı
-                                                    ({totalCompleted}/{selectedRecord.count})</Tag>;
+                                            // Tüm makinelerin durumu 2 ise (Tamamlandı)
+                                            const allMachinesCompleted = selectedRecord.productionToMachines.every(m => m.status === 2);
+                                            if (allMachinesCompleted) {
+                                                return <Tag color="green">Tamamlandı</Tag>;
                                             }
 
-                                            // Devam ediyor durumu
-                                            return <Tag color="blue">Devam Ediyor
-                                                ({totalCompleted}/{selectedRecord.count})</Tag>;
+                                            // En az bir makinenin durumu 0'dan farklı ise (Devam Ediyor)
+                                            const anyMachineInProgress = selectedRecord.productionToMachines.some(m => m.status !== 0);
+                                            if (anyMachineInProgress) {
+                                                return <Tag color="blue">Devam Ediyor</Tag>;
+                                            }
+
+                                            // Beklenmedik durumlar için
+                                            return <Tag color="purple">Beklenmedik Durum</Tag>;
                                         })()}
                                     </Descriptions.Item>
                                 </Descriptions>

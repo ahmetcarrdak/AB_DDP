@@ -301,6 +301,7 @@ function QRScreen() {
                             onPressEnter={handleShowDetails}
                         />
                     </Col>
+                    {/*
                     <Col span={12}>
                         <Space>
                             <Input
@@ -317,6 +318,7 @@ function QRScreen() {
                             </Checkbox>
                         </Space>
                     </Col>
+                    */}
                 </Row>
                 <Row gutter={16} style={{marginTop: 16}}>
                     <Col span={12}>
@@ -386,24 +388,6 @@ function QRScreen() {
                                     </Tag>
                                 </Descriptions.Item>
                             </Descriptions>
-                        </TabPane>
-
-                        <TabPane tab="Seans Bilgileri" key="2">
-                            {productionDetails.productToSeans?.map((seans, index) => (
-                                <Card key={index} style={{marginBottom: 16}}>
-                                    <Descriptions bordered column={2}>
-                                        <Descriptions.Item label="Seans Barkodu">{seans.barcode}</Descriptions.Item>
-                                        <Descriptions.Item label="Adet">{seans.count}</Descriptions.Item>
-                                        <Descriptions.Item label="Durum">
-                                            <Tag color={seans.isCompleted ? "green" : "orange"}>
-                                                {seans.isCompleted ? "Tamamlandı" : "Devam Ediyor"}
-                                            </Tag>
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label="Makine ID">{seans.machineId}</Descriptions.Item>
-                                        <Descriptions.Item label="Toplu İş Boyutu">{seans.batchSize}</Descriptions.Item>
-                                    </Descriptions>
-                                </Card>
-                            ))}
                         </TabPane>
 
                         <TabPane tab="Makine Bilgileri" key="3">

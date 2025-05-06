@@ -259,14 +259,6 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
             sorter: (a, b) => a.count - b.count,
         },
         {
-            title: 'Tamamlanan',
-            key: 'completedCount',
-            render: (_, record) => {
-                const completed = record.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0;
-                return `${completed} / ${record.count}`;
-            }
-        },
-        {
             title: 'Açıklama',
             dataIndex: 'description',
             key: 'description',
@@ -472,37 +464,6 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
 
                             <Divider/>
 
-                            <Card bordered={false}>
-                                <Space size="middle" style={{marginBottom: 16}}>
-                                    <Card>
-                                        <Statistic
-                                            title="Toplam Üretim Adedi"
-                                            value={selectedRecord.count}
-                                        />
-                                    </Card>
-                                    <Card>
-                                        <Statistic
-                                            title="Tamamlanan"
-                                            value={selectedRecord.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0}
-                                        />
-                                    </Card>
-                                    <Card>
-                                        <Statistic
-                                            title="Kalan"
-                                            value={selectedRecord.count - (selectedRecord.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0)}
-                                        />
-                                    </Card>
-                                    <Card>
-                                        <Statistic
-                                            title="Seans Sayısı"
-                                            value={selectedRecord.productToSeans?.length || 0}
-                                        />
-                                    </Card>
-                                </Space>
-                            </Card>
-
-                            <Divider/>
-
                             <Tabs defaultActiveKey="1">
                                 <TabPane tab="Makine Bilgileri" key="1">
                                     {selectedRecord.productionToMachines && selectedRecord.productionToMachines.length > 0 ? (
@@ -573,49 +534,6 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
                                         />
                                     ) : (
                                         <Text italic>Yarı Mamül kaydı bulunamadı</Text>
-                                    )}
-                                </TabPane>
-
-                                <TabPane tab="Üretim Seansları" key="3">
-                                    {selectedRecord.productToSeans && selectedRecord.productToSeans.length > 0 ? (
-                                        <List
-                                            itemLayout="horizontal"
-                                            dataSource={selectedRecord.productToSeans}
-                                            renderItem={(item: ProductToSeans) => (
-                                                <List.Item>
-                                                    <Card style={{width: '100%'}}
-                                                          title={`Seans #${item.id}`}
-                                                          extra={<Tag color={item.isCompleted ? 'green' : 'blue'}>
-                                                              {item.isCompleted ? 'Tamamlandı' : 'Devam Ediyor'}
-                                                          </Tag>}
-                                                    >
-                                                        <Descriptions column={2} bordered>
-                                                            <Descriptions.Item
-                                                                label="Parti Adedi">{item.count}</Descriptions.Item>
-                                                            <Descriptions.Item
-                                                                label="Toplam Parti">{item.batchSize}</Descriptions.Item>
-                                                            <Descriptions.Item label="Barkod">
-                                                                <Button
-                                                                    type="link"
-                                                                    onClick={() => showBarcode(item.barcode)}
-                                                                    icon={<BarcodeOutlined/>}
-                                                                >
-                                                                    {item.barcode}
-                                                                </Button>
-                                                            </Descriptions.Item>
-                                                            <Descriptions.Item
-                                                                label="Makine ID">{item.machineId}</Descriptions.Item>
-                                                            <Descriptions.Item label="Durum">
-                                                                {item.status === 0 ? 'Bekliyor' :
-                                                                    item.status === 1 ? 'İşleniyor' : 'Tamamlandı'}
-                                                            </Descriptions.Item>
-                                                        </Descriptions>
-                                                    </Card>
-                                                </List.Item>
-                                            )}
-                                        />
-                                    ) : (
-                                        <Text italic>Henüz üretim seansı oluşturulmamış</Text>
                                     )}
                                 </TabPane>
                             </Tabs>

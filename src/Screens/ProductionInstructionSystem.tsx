@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
     Table, Button, Input, Space, Drawer, Descriptions,
     Card, Divider, Tabs, List, Tag, Typography, Spin, message, Modal, Statistic
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import type {ColumnsType} from 'antd/es/table';
 import {
     SearchOutlined, DownloadOutlined,
     ReloadOutlined, EyeOutlined, PlusOutlined, BarcodeOutlined
@@ -11,14 +11,14 @@ import {
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import apiClient from "../Utils/ApiClient";
-import { apiUrl } from "../Settings";
+import {apiUrl} from "../Settings";
 import HeaderComponent from "../Components/HeaderComponent";
-import { Link } from "react-router-dom";
+import {Link} from "react-router-dom";
 import Barcode from 'react-barcode';
 import * as htmlToImage from 'html-to-image';
 
-const { TabPane } = Tabs;
-const { Title, Text } = Typography;
+const {TabPane} = Tabs;
+const {Title, Text} = Typography;
 
 // Interfaces
 interface Machine {
@@ -96,7 +96,7 @@ interface ProdutionInstructionProps {
 }
 
 // Ana bileşen
-const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onToggleMenu }) => {
+const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onToggleMenu}) => {
     // State tanımlamaları
     const [data, setData] = useState<ProductionInstruction[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -246,7 +246,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                 <Button
                     type="link"
                     onClick={() => showBarcode(text)}
-                    style={{ padding: 0 }}
+                    style={{padding: 0}}
                 >
                     {text}
                 </Button>
@@ -285,7 +285,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
             render: (_, record) => {
                 const totalCompleted = record.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0;
 
-                if (record.machineId === null || record.machineId < 0) {
+                if (record.machineId === null || record.machineId < 1) {
                     return <Tag color="red">Henüz Başlanmadı</Tag>;
                 }
 
@@ -300,9 +300,9 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                 );
             },
             filters: [
-                { text: 'Tamamlandı', value: 'completed' },
-                { text: 'Devam Ediyor', value: 'ongoing' },
-                { text: 'Henüz Başlanmadı', value: 'not_started' }
+                {text: 'Tamamlandı', value: 'completed'},
+                {text: 'Devam Ediyor', value: 'ongoing'},
+                {text: 'Henüz Başlanmadı', value: 'not_started'}
             ],
             onFilter: (value, record) => {
                 const totalCompleted = record.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0;
@@ -318,7 +318,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
             render: (_, record) => (
                 <Button
                     type="primary"
-                    icon={<EyeOutlined />}
+                    icon={<EyeOutlined/>}
                     onClick={() => showDetail(record)}
                 >
                     Detaylar
@@ -332,24 +332,24 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
             <HeaderComponent
                 onToggleMenu={onToggleMenu}
             />
-            <div style={{ padding: '20px' }}>
+            <div style={{padding: '20px'}}>
                 <Card>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 16}}>
                         <Title level={4}>Üretim Talimatları</Title>
 
                         <Space>
                             <Input
                                 placeholder="Ara..."
-                                prefix={<SearchOutlined />}
+                                prefix={<SearchOutlined/>}
                                 value={searchText}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                style={{ width: 250 }}
+                                style={{width: 250}}
                                 allowClear
                             />
 
                             <Button
                                 type="primary"
-                                icon={<DownloadOutlined />}
+                                icon={<DownloadOutlined/>}
                                 onClick={exportToExcel}
                                 disabled={filteredData.length === 0}
                             >
@@ -357,7 +357,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                             </Button>
 
                             <Button
-                                icon={<ReloadOutlined />}
+                                icon={<ReloadOutlined/>}
                                 onClick={fetchData}
                             >
                                 Yenile
@@ -365,7 +365,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                             <Link to={"/production-add"}>
                                 <Button
                                     type="link"
-                                    icon={<PlusOutlined />}
+                                    icon={<PlusOutlined/>}
                                 >
                                     Yeni Üretim Talimatı Ekle
                                 </Button>
@@ -383,7 +383,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                             showSizeChanger: true,
                             showTotal: (total) => `Toplam ${total} kayıt`
                         }}
-                        locale={{ emptyText: 'Veri bulunamadı' }}
+                        locale={{emptyText: 'Veri bulunamadı'}}
                     />
                 </Card>
 
@@ -394,7 +394,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                     onCancel={() => setBarcodeModalVisible(false)}
                     footer={[
                         <Button key="download" type="primary" onClick={downloadBarcode}>
-                            <DownloadOutlined /> İndir
+                            <DownloadOutlined/> İndir
                         </Button>,
                         <Button key="close" onClick={() => setBarcodeModalVisible(false)}>
                             Kapat
@@ -402,7 +402,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                     ]}
                     width={600}
                 >
-                    <div className="barcode-container" style={{ textAlign: 'center', margin: '20px 0' }}>
+                    <div className="barcode-container" style={{textAlign: 'center', margin: '20px 0'}}>
                         <Barcode
                             value={currentBarcode || ''}
                             width={2}
@@ -439,21 +439,40 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                                     )}
 
                                     <Descriptions.Item label="Durum">
-                                        {selectedRecord.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) === 0 ? (
-                                            <Tag color="red">Henüz Başlanmadı</Tag>
-                                        ) : (
-                                            <Tag color={selectedRecord.isComplated ? 'green' : 'blue'}>
-                                                {selectedRecord.isComplated ? 'Tamamlandı' : 'Devam Ediyor'}
-                                            </Tag>
-                                        )}
+                                        {(() => {
+                                            // Toplam tamamlanan adet
+                                            const totalCompleted = selectedRecord.productToSeans?.filter((s: ProductToSeans) => s.isCompleted)
+                                                .reduce((sum: number, s: ProductToSeans) => sum + s.count, 0) || 0;
+
+                                            // Hiç işlem yapılmamışsa (makine ataması yok veya seans yok)
+                                            if (!selectedRecord.productionToMachines?.length || !selectedRecord.productToSeans?.length) {
+                                                return <Tag color="red">Henüz Başlanmadı</Tag>;
+                                            }
+
+                                            // Tüm makinelerden çıkış yapılmışsa
+                                            const allMachinesExited = selectedRecord.productionToMachines.every((machine: Machine) =>
+                                                selectedRecord.productToSeans.some((s: ProductToSeans) =>
+                                                    s.machineId === machine.machineId && s.status === 2
+                                                )
+                                            );
+
+                                            if (allMachinesExited) {
+                                                return <Tag color="green">Tamamlandı
+                                                    ({totalCompleted}/{selectedRecord.count})</Tag>;
+                                            }
+
+                                            // Devam ediyor durumu
+                                            return <Tag color="blue">Devam Ediyor
+                                                ({totalCompleted}/{selectedRecord.count})</Tag>;
+                                        })()}
                                     </Descriptions.Item>
                                 </Descriptions>
                             </Card>
 
-                            <Divider />
+                            <Divider/>
 
                             <Card bordered={false}>
-                                <Space size="middle" style={{ marginBottom: 16 }}>
+                                <Space size="middle" style={{marginBottom: 16}}>
                                     <Card>
                                         <Statistic
                                             title="Toplam Üretim Adedi"
@@ -481,7 +500,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                                 </Space>
                             </Card>
 
-                            <Divider />
+                            <Divider/>
 
                             <Tabs defaultActiveKey="1">
                                 <TabPane tab="Makine Bilgileri" key="1">
@@ -511,7 +530,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                                                 return (
                                                     <List.Item>
                                                         <Card
-                                                            style={{ width: '100%', backgroundColor: bgColor }}
+                                                            style={{width: '100%', backgroundColor: bgColor}}
                                                             title={`${item.machine.name} - ${statusText}`}
                                                         >
                                                             <Descriptions column={1} bordered>
@@ -542,7 +561,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                                             dataSource={selectedRecord.productionStores}
                                             renderItem={(item: Store) => (
                                                 <List.Item>
-                                                    <Card style={{ width: '100%' }} title={item.name}>
+                                                    <Card style={{width: '100%'}} title={item.name}>
                                                         <Descriptions column={1} bordered>
                                                             <Descriptions.Item
                                                                 label="Barkod">{item.barkod}</Descriptions.Item>
@@ -563,25 +582,28 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                                             dataSource={selectedRecord.productToSeans}
                                             renderItem={(item: ProductToSeans) => (
                                                 <List.Item>
-                                                    <Card style={{ width: '100%' }}
+                                                    <Card style={{width: '100%'}}
                                                           title={`Seans #${item.id}`}
                                                           extra={<Tag color={item.isCompleted ? 'green' : 'blue'}>
                                                               {item.isCompleted ? 'Tamamlandı' : 'Devam Ediyor'}
                                                           </Tag>}
                                                     >
                                                         <Descriptions column={2} bordered>
-                                                            <Descriptions.Item label="Parti Adedi">{item.count}</Descriptions.Item>
-                                                            <Descriptions.Item label="Toplam Parti">{item.batchSize}</Descriptions.Item>
+                                                            <Descriptions.Item
+                                                                label="Parti Adedi">{item.count}</Descriptions.Item>
+                                                            <Descriptions.Item
+                                                                label="Toplam Parti">{item.batchSize}</Descriptions.Item>
                                                             <Descriptions.Item label="Barkod">
                                                                 <Button
                                                                     type="link"
                                                                     onClick={() => showBarcode(item.barcode)}
-                                                                    icon={<BarcodeOutlined />}
+                                                                    icon={<BarcodeOutlined/>}
                                                                 >
                                                                     {item.barcode}
                                                                 </Button>
                                                             </Descriptions.Item>
-                                                            <Descriptions.Item label="Makine ID">{item.machineId}</Descriptions.Item>
+                                                            <Descriptions.Item
+                                                                label="Makine ID">{item.machineId}</Descriptions.Item>
                                                             <Descriptions.Item label="Durum">
                                                                 {item.status === 0 ? 'Bekliyor' :
                                                                     item.status === 1 ? 'İşleniyor' : 'Tamamlandı'}
@@ -598,7 +620,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
                             </Tabs>
                         </div>
                     ) : (
-                        <Spin tip="Yükleniyor..." />
+                        <Spin tip="Yükleniyor..."/>
                     )}
                 </Drawer>
             </div>

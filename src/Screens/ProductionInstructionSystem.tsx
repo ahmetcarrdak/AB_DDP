@@ -285,7 +285,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({ onTo
             render: (_, record) => {
                 const totalCompleted = record.productToSeans?.filter(s => s.isCompleted).reduce((sum, s) => sum + s.count, 0) || 0;
 
-                if (totalCompleted === 0) {
+                if (record.machineId === null || record.machineId < 0) {
                     return <Tag color="red">Henüz Başlanmadı</Tag>;
                 }
 

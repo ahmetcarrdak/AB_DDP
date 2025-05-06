@@ -186,7 +186,7 @@ function QRScreen() {
 
             if (response.status === 200) {
                 setResponseMessage(response.data?.message || "İşlem başarıyla tamamlandı");
-                resetForm();
+                //resetForm();
             }
         } catch (error: any) {
 

@@ -289,8 +289,9 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
                     return <Tag color="red">Henüz Başlanmadı</Tag>;
                 }
 
-                if (totalCompleted >= record.count) {
-                    return <Tag color="green">Tamamlandı</Tag>;
+                // Tüm makinelerden çıkış yapılmışsa (isComplated = 1)
+                if (record.isComplated === 1) {
+                    return <Tag color="green">Tamamlandı ({totalCompleted}/{record.count})</Tag>;
                 }
 
                 return (

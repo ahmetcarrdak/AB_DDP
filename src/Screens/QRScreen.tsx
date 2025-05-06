@@ -199,6 +199,42 @@ function QRScreen() {
         }
     };
 
+    const handleMachineEntry = async () => {
+        try {
+            setLoading(true);
+            const response = await apiClient.post(`${apiUrl.MachineOperations}/enter`, {
+                machineId: parseInt(id!),
+                barcode,
+                count: quantity
+            });
+
+            setResponseMessage(response.data?.message || "Makineye giriş başarılı");
+            resetForm();
+        } catch (error: any) {
+            setResponseMessage(error.response?.data?.message || "Giriş işlemi başarısız");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleMachineExit = async () => {
+        try {
+            setLoading(true);
+            const response = await apiClient.post(`${apiUrl.MachineOperations}/exit`, {
+                machineId: parseInt(id!),
+                barcode,
+                count: quantity
+            });
+
+            setResponseMessage(response.data?.message || "Makinadan çıkış başarılı");
+            resetForm();
+        } catch (error: any) {
+            setResponseMessage(error.response?.data?.message || "Çıkış işlemi başarısız");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const resetForm = () => {
         setBarcode('');
         setQuantity(0);
@@ -294,17 +330,31 @@ function QRScreen() {
                             Detayları Göster
                         </Button>
                     </Col>
-                    <Col span={12}>
-                        <Button
-                            type="primary"
-                            danger
-                            onClick={handleCompleteProcess}
-                            disabled={!barcode || quantity <= 0}
-                            block
-                        >
-                            {allowEditQuantity ? ("Yeni parti olarak işlemi tamamla"): ("İşlemi tamamla")}
-                        </Button>
-                    </Col>
+                    <Row gutter={16} style={{marginTop: 16}}>
+                        <Col span={12}>
+                            <Button
+                                type="primary"
+                                onClick={handleMachineEntry}
+                                disabled={!barcode || quantity <= 0}
+                                loading={loading}
+                                block
+                            >
+                                Makineye Giriş Yap
+                            </Button>
+                        </Col>
+                        <Col span={12}>
+                            <Button
+                                type="primary"
+                                danger
+                                onClick={handleMachineExit}
+                                disabled={!barcode || quantity <= 0}
+                                loading={loading}
+                                block
+                            >
+                                Makineden Çıkış Yap
+                            </Button>
+                        </Col>
+                    </Row>
                 </Row>
             </Card>
             {responseMessage && (

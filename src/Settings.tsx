@@ -71,6 +71,7 @@ export const apiUrl = {
     ProductionInsDetail: "ProductionInstruction/detail",
     ProductionInsUpdate: "ProductionInstruction/update",
     ProductionInsDelete: "ProductionInstruction/delete",
+    MachineOperations: "ProductionInstruction"
 };
 
 

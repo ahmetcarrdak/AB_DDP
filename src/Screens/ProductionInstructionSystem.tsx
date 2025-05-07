@@ -29,10 +29,12 @@ interface Machine {
     entryDate: string;
     exitDate: string;
     status: any | number;
+    barcode: string;
     machine: {
         id: number;
         companyId: number;
         name: string;
+        barcode: string;
         model: string;
         serialNumber: string;
         manufacturer: string;
@@ -503,7 +505,7 @@ const ProductionInstructionSystem: React.FC<ProdutionInstructionProps> = ({onTog
                                                     <List.Item>
                                                         <Card
                                                             style={{width: '100%', backgroundColor: bgColor}}
-                                                            title={`${item.machine.name} - ${statusText}`}
+                                                            title={`${item.machine.name} - ${statusText} - ${item.machine.barcode}`}
                                                         >
                                                             <Descriptions column={1} bordered>
                                                                 <Descriptions.Item

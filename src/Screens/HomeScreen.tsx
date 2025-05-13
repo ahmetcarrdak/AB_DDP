@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Card, List, message } from "antd";
+import React, {useEffect, useState} from "react";
+import {Card, List, message} from "antd";
 import {
     BarChart,
     Bar,
@@ -13,9 +13,10 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import HeaderComponent from "../Components/HeaderComponent";
-import { apiUrl } from "../Settings";
+import {apiUrl} from "../Settings";
 import apiClient from "../Utils/ApiClient";
 import ProductionStatus from "../Components/ProductionStatus";
+import ProductionMachineTracker from "./ProductionMachineTracker";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
@@ -100,7 +101,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabCh
     const [orderData, setOrderData] = useState<{ name: string; count: number }[]>([]);
     const [workstationJobs, setWorkstationJobs] = useState<{ name: string; jobs: number }[]>([]);
     const [machineStatus, setMachineStatus] = useState<{ name: string; status: string }[]>([]);
-    const [recentInstructions, setRecentInstructions] = useState<{ id: number; title: string; insertDate: string }[]>([]);
+    const [recentInstructions, setRecentInstructions] = useState<{
+        id: number;
+        title: string;
+        insertDate: string
+    }[]>([]);
     const [productionStats, setProductionStats] = useState<{ day: string; completed: number }[]>([]);
 
     const fetchData = async () => {
@@ -133,9 +138,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabCh
                 });
 
                 setOrderData([
-                    { name: "Tamamlandı", count: completed },
-                    { name: "Devam Ediyor", count: ongoing },
-                    { name: "Başlamadı", count: notStarted },
+                    {name: "Tamamlandı", count: completed},
+                    {name: "Devam Ediyor", count: ongoing},
+                    {name: "Başlamadı", count: notStarted},
                 ]);
 
                 const machineJobCounts = data.reduce((acc: { [key: string]: number }, item: any) => {
@@ -239,7 +244,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabCh
                                                 if (existing) {
                                                     existing.count++;
                                                 } else {
-                                                    acc.push({ name: item.status, count: 1 });
+                                                    acc.push({name: item.status, count: 1});
                                                 }
                                                 return acc;
                                             }, [] as { name: string; count: number }[])}
@@ -277,7 +282,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({onToggleMenu, activeTab, onTabCh
                     </div>
                 );
             case 2:
-                return <ProductionStatus />;
+                return <ProductionStatus/>;
+            case 3:
+                return <ProductionMachineTracker/>;
             default:
                 return <div>Geçerli bir sekme seçilmedi</div>;
         }

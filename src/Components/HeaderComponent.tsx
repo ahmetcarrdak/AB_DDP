@@ -56,10 +56,10 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
                         Genel Bakış
                     </button>
                     <button
-                        className={`tab-button ${activeTab === 2 ? 'active' : ''}`}
-                        onClick={() => handleMenuClick(2)}
+                        className={`tab-button ${activeTab === 3 ? 'active' : ''}`}
+                        onClick={() => handleMenuClick(3)}
                     >
-                        Üretim Durumları
+                        İş Bölümleri
                     </button>
                 </div>
             )}

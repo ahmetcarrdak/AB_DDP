@@ -1,639 +1,429 @@
-import React, {useState, useEffect} from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import {
     Layout,
-    Card,
-    Row,
-    Col,
-    Typography,
-    Tag,
-    Space,
-    Drawer,
+    Menu,
     Table,
+    Typography,
+    message,
     Spin,
-    Empty,
-    Divider,
-    Badge,
-    Tabs,
+    Tag,
     Button,
-    Alert
+    Modal,
+    Descriptions,
+    Card,
+    Space,
+    Badge
 } from 'antd';
 import {
-    ToolOutlined,
-    ClockCircleOutlined,
-    CheckCircleOutlined,
-    CloseCircleOutlined,
     InfoCircleOutlined,
-    ReloadOutlined,
-    WarningOutlined
+    PlayCircleOutlined,
+    CheckCircleOutlined,
+    ArrowRightOutlined
 } from '@ant-design/icons';
 import apiClient from "../Utils/ApiClient";
 import {apiUrl} from "../Settings";
-import HeaderComponent from "../Components/HeaderComponent";
 
-const {Header, Content} = Layout;
-const {Title, Text} = Typography;
-const {TabPane} = Tabs;
-
-// Tip tanımlamaları
-interface Company {
-    name: string;
-}
+const { Sider, Content } = Layout;
+const { Title, Text } = Typography;
 
 interface Machine {
-    id: number;
-    name: string;
-    model: string;
-    serialNumber: string;
-    manufacturer: string;
-    purchaseDate: string;
-    lastMaintenanceDate: string;
-    nextMaintenanceDate: string;
-    description: string;
-    isActive: boolean;
-    location: string;
-    isOperational: boolean;
-    company: Company | null;
-    totalFault: number;
-}
-
-interface ProductionToMachine {
     id: number;
     productionInstructionId: number;
     machineId: number;
     line: number;
-    status: number;
-    entryDate: string;
-    exitDate: string;
-    machine: Machine;
+    status: number; // 0: bekliyor, 1: aktif, 2: tamamlandı
+    entryDate: string | null;
+    exitDate: string | null;
+    machine: {
+        id: number;
+        name: string;
+        model: string;
+        serialNumber: string;
+        isOperational: boolean;
+        location: string;
+    };
 }
 
-interface ProductionStore {
+interface ProductToSeans {
     id: number;
-    productionInstructionId: number;
-    name: string;
-    barkod: string;
+    productId: number;
+    count: number;
+    barcode: string;
+    machineId: number;
+    batchSize: number;
+    isCompleted: boolean;
+    status: number;
 }
 
 interface ProductionInstruction {
     id: number;
     title: string;
-    description: string;
+    barcode: string;
     insertDate: string;
-    complatedDate: string | null;
-    deletedDate: string | null;
     isComplated: number;
-    isDeleted: number;
-    machineId: number | null;
-    productionToMachines: ProductionToMachine[];
-    productionStores: ProductionStore[];
+    machineId: any | number;
+    productionToMachines: Machine[];
+    productToSeans: ProductToSeans[];
+    description?: string;
+    count?: number;
 }
 
-interface ProdutionInstructionProps {
-    onToggleMenu: () => void;
-}
+const ProductionMachineTracker: React.FC = () => {
+    const [instructions, setInstructions] = useState<ProductionInstruction[]>([]);
+    const [machineList, setMachineList] = useState<Machine[]>([]);
+    const [selectedMachineId, setSelectedMachineId] = useState<number | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [selectedInstruction, setSelectedInstruction] = useState<ProductionInstruction | null>(null);
+    const [detailModalVisible, setDetailModalVisible] = useState(false);
+    const [processing, setProcessing] = useState(false);
 
-const ProductionMachineTracker: React.FC<ProdutionInstructionProps> = ({onToggleMenu}) => {
-    // State tanımlamaları
-    const [machines, setMachines] = useState<Machine[]>([]);
-    const [productions, setProductions] = useState<ProductionInstruction[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [drawerVisible, setDrawerVisible] = useState<boolean>(false);
-    const [selectedItem, setSelectedItem] = useState<ProductionInstruction | Machine | null>(null);
-    const [selectedItemType, setSelectedItemType] = useState<'machine' | 'production'>('machine');
-
-    // Verilerin getirilmesi
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                // Makineleri ve üretim talimatlarını paralel olarak çek
-                const [machinesResponse, productionsResponse] = await Promise.all([
-                    apiClient.get(apiUrl.machine),
-                    apiClient.get(apiUrl.ProductionInsList)
-                ]);
-
-                setMachines(machinesResponse.data);
-                setProductions(productionsResponse.data);
-                setError(null);
-            } catch (err) {
-                console.error('Veri çekme hatası:', err);
-                setError('Veriler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    // Makine kartına tıklama işleyicisi
-    const handleMachineClick = (machine: Machine) => {
-        setSelectedItem(machine);
-        setSelectedItemType('machine');
-        setDrawerVisible(true);
-    };
-
-    // Üretim talimatına tıklama işleyicisi
-    const handleProductionClick = (production: ProductionInstruction) => {
-        setSelectedItem(production);
-        setSelectedItemType('production');
-        setDrawerVisible(true);
-    };
-
-    // Drawer'ı kapatma işleyicisi
-    const closeDrawer = () => {
-        setDrawerVisible(false);
-    };
-
-    // Verileri yeniden yükleme işleyicisi
-    const handleRefresh = async () => {
+    const fetchInstructions = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const [machinesResponse, productionsResponse] = await Promise.all([
-                apiClient.get(apiUrl.machine),
-                apiClient.get(apiUrl.ProductionInsList)
-            ]);
+            const response = await apiClient.get<ProductionInstruction[]>(apiUrl.ProductionInsList);
+            setInstructions(response.data);
 
-            setMachines(machinesResponse.data);
-            setProductions(productionsResponse.data);
-            setError(null);
-        } catch (err) {
-            console.error('Veri yenileme hatası:', err);
-            setError('Veriler yenilenirken bir hata oluştu.');
+            const allMachines: Machine[] = response.data.flatMap((ins) =>
+                ins.productionToMachines.map((m) => ({
+                    ...m,
+                    machine: m.machine,
+                }))
+            );
+
+            const uniqueMachines = Array.from(
+                new Map(allMachines.map((m) => [m.machine.id, m])).values()
+            );
+
+            setMachineList(uniqueMachines);
+            if (uniqueMachines.length > 0) {
+                setSelectedMachineId(uniqueMachines[0].machine.id);
+            }
+        } catch (error) {
+            message.error('Veriler yüklenirken hata oluştu');
+            console.error(error);
         } finally {
             setLoading(false);
         }
     };
 
-    // Makine detayları görünümü
-    const renderMachineDetails = () => {
-        const machine = selectedItem as Machine;
-        if (!machine) return null;
+    useEffect(() => {
+        fetchInstructions();
+    }, []);
 
-        // Makine ile ilgili üretim talimatlarını bul
-        const relatedProductions = productions.filter(prod =>
-            prod.productionToMachines.some(ptm => ptm.machineId === machine.id)
-        );
-
-        return (
-            <>
-                <Title level={4}>Makine Detayları</Title>
-                <Divider/>
-
-                <Row gutter={[16, 16]}>
-                    <Col span={12}>
-                        <Text strong>Makine Adı:</Text> {machine.name}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Model:</Text> {machine.model}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Üretici:</Text> {machine.manufacturer}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Seri No:</Text> {machine.serialNumber}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Durum:</Text>{' '}
-                        {machine.isOperational ? (
-                            <Tag color="green">Çalışıyor</Tag>
-                        ) : (
-                            <Tag color="red">Çalışmıyor</Tag>
-                        )}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Arıza Sayısı:</Text> {machine.totalFault}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Konum:</Text> {machine.location}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Son Bakım:</Text>{' '}
-                        {new Date(machine.lastMaintenanceDate).toLocaleDateString('tr-TR')}
-                    </Col>
-                    <Col span={24}>
-                        <Text strong>Açıklama:</Text> {machine.description}
-                    </Col>
-                </Row>
-
-                <Divider/>
-                <Title level={5}>İlgili Üretim Talimatları ({relatedProductions.length})</Title>
-
-                {relatedProductions.length > 0 ? (
-                    <Table
-                        dataSource={relatedProductions}
-                        rowKey="id"
-                        pagination={false}
-                        size="small"
-                        columns={[
-                            {
-                                title: 'Talimat Adı',
-                                dataIndex: 'title',
-                                key: 'title',
-                            },
-                            {
-                                title: 'Durum',
-                                dataIndex: 'isComplated',
-                                key: 'isComplated',
-                                render: (_, record) => {
-                                    if (record.isComplated === 1) {
-                                        return <Tag color="green">Tamamlandı</Tag>;
-                                    }
-                                    if (record.isDeleted === 1) {
-                                        return <Tag color="red">İptal Edildi</Tag>;
-                                    }
-                                    if (!record.machineId || record.machineId <= 0) {
-                                        return <Tag color="red">Henüz Başlanmadı</Tag>;
-                                    }
-
-                                    return <Tag color="blue">Devam Ediyor</Tag>;
-                                }
-                            },
-                            {
-                                title: 'Oluşturulma',
-                                dataIndex: 'insertDate',
-                                key: 'insertDate',
-                                render: (date) => new Date(date).toLocaleDateString('tr-TR')
-                            }
-                        ]}
-                    />
-                ) : (
-                    <Empty description="Bu makineye atanmış üretim talimatı bulunamadı"/>
-                )}
-            </>
+    const getInstructionsForMachine = (machineId: number) => {
+        return instructions.filter(ins =>
+            ins.productionToMachines.some(m => m.machine.id === machineId)
         );
     };
 
-    // Üretim detayları görünümü
-    const renderProductionDetails = () => {
-        const production = selectedItem as ProductionInstruction;
-        if (!production) return null;
-
-        return (
-            <>
-                <Title level={4}>Üretim Talimatı Detayları</Title>
-                <Divider/>
-
-                <Row gutter={[16, 16]}>
-                    <Col span={18}>
-                        <Text strong>Talimat Adı:</Text> {production.title}
-                    </Col>
-                    <Col span={6}>
-                        <Text strong>Durum:</Text>{' '}
-                        {production.isComplated === 1 ? (
-                            <Tag color="green">Tamamlandı</Tag>
-                        ) : production.isDeleted === 1 ? (
-                            <Tag color="red">İptal Edildi</Tag>
-                        ) : !production.machineId || production.machineId === 0 ? (
-                            <Tag color="red">Henüz Başlanmadı</Tag>
-                        ) : (
-                            <Tag color="blue">Devam Ediyor</Tag>
-                        )}
-                    </Col>
-                    <Col span={12}>
-                        <Text strong>Oluşturulma:</Text>{' '}
-                        {new Date(production.insertDate).toLocaleDateString('tr-TR')}
-                    </Col>
-                    {production.complatedDate && (
-                        <Col span={12}>
-                            <Text strong>Tamamlanma:</Text>{' '}
-                            {new Date(production.complatedDate).toLocaleDateString('tr-TR')}
-                        </Col>
-                    )}
-                    <Col span={24}>
-                        <Text strong>Açıklama:</Text> {production.description}
-                    </Col>
-                </Row>
-
-                <Divider/>
-
-                <Tabs defaultActiveKey="machines">
-                    <TabPane tab="Makineler" key="machines">
-                        {production.productionToMachines.length > 0 ? (
-                            <Table
-                                dataSource={production.productionToMachines}
-                                rowKey="id"
-                                pagination={false}
-                                size="small"
-                                columns={[
-                                    {
-                                        title: 'Makine Adı',
-                                        dataIndex: ['machine', 'name'],
-                                        key: 'machineName',
-                                    },
-                                    {
-                                        title: 'Hat',
-                                        dataIndex: 'line',
-                                        key: 'line',
-                                    },
-                                    {
-                                        title: 'Giriş Tarihi',
-                                        dataIndex: 'entryDate',
-                                        key: 'entryDate',
-                                        render: (date) => new Date(date).toLocaleDateString('tr-TR')
-                                    },
-                                    {
-                                        title: 'Çıkış Tarihi',
-                                        dataIndex: 'exitDate',
-                                        key: 'exitDate',
-                                        render: (date) => date ? new Date(date).toLocaleDateString('tr-TR') : '-'
-                                    },
-                                    {
-                                        title: 'Durum',
-                                        key: 'status',
-                                        render: (_, record) => (
-                                            record.machine.isOperational ?
-                                                <Tag color="green">Çalışıyor</Tag> :
-                                                <Tag color="red">Çalışmıyor</Tag>
-                                        )
-                                    }
-                                ]}
-                            />
-                        ) : (
-                            <Empty description="Bu talimata atanmış makine bulunamadı"/>
-                        )}
-                    </TabPane>
-                    <TabPane tab="Ürünler" key="products">
-                        {production.productionStores.length > 0 ? (
-                            <Table
-                                dataSource={production.productionStores}
-                                rowKey="id"
-                                pagination={false}
-                                size="small"
-                                columns={[
-                                    {
-                                        title: 'Ürün Adı',
-                                        dataIndex: 'name',
-                                        key: 'name',
-                                    },
-                                    {
-                                        title: 'Barkod',
-                                        dataIndex: 'barkod',
-                                        key: 'barkod',
-                                    }
-                                ]}
-                            />
-                        ) : (
-                            <Empty description="Bu talimata bağlı ürün bulunamadı"/>
-                        )}
-                    </TabPane>
-                </Tabs>
-            </>
-        );
+    const getInstructionStatus = (instruction: ProductionInstruction, machineId: number) => {
+        const machineAssignment = instruction.productionToMachines.find(m => m.machine.id === machineId);
+        const seansStatus = instruction.productToSeans?.find(s => s.machineId === machineId)?.status;
+        return seansStatus !== undefined ? seansStatus : machineAssignment?.status;
     };
 
-    // Her makine için ilgili üretim talimatlarını bulma
-    const findRelatedProductionsForMachine = (machineId: number) => {
-        return productions.filter(prod =>
-            prod.productionToMachines.some(ptm => ptm.machineId === machineId)
-        );
+    const handleStartProcess = async (instruction: ProductionInstruction) => {
+        if (!selectedMachineId) return;
+
+        setProcessing(true);
+        try {
+            const response = await apiClient.post(`${apiUrl.MachineOperations}/enter`, {
+                machineId: selectedMachineId,
+                barcode: instruction.barcode,
+                count: instruction.count || 1
+            });
+
+            message.success(response.data?.message || "İşlem başlatıldı");
+            fetchInstructions(); // Verileri yenile
+        } catch (error: any) {
+            message.error(error.response?.data?.message || "İşlem başlatılamadı");
+        } finally {
+            setProcessing(false);
+        }
     };
 
-    // Yükleme durumu kontrolü
-    if (loading && machines.length === 0 && productions.length === 0) {
-        return (
-            <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
-                <Spin size="large" tip="Veriler yükleniyor..."/>
-            </div>
-        );
-    }
+    const handleCompleteProcess = async (instruction: ProductionInstruction) => {
+        if (!selectedMachineId) return;
+
+        setProcessing(true);
+        try {
+            const response = await apiClient.post(`${apiUrl.MachineOperations}/exit`, {
+                machineId: selectedMachineId,
+                barcode: instruction.barcode,
+                count: instruction.count || 1
+            });
+
+            message.success(response.data?.message || "İşlem tamamlandı");
+            fetchInstructions(); // Verileri yenile
+        } catch (error: any) {
+            message.error(error.response?.data?.message || "İşlem tamamlanamadı");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const countActiveInstructions = (machineId: number) => {
+        return instructions.filter(ins =>
+            ins.productionToMachines.some(m =>
+                m.machine.id === machineId &&
+                (getInstructionStatus(ins, machineId) === 1)
+            )
+        ).length;
+    };
+
+    const columns = [
+        {
+            title: 'Talimat Bilgileri',
+            key: 'info',
+            render: (record: ProductionInstruction) => (
+                <div>
+                    <Text strong>{record.title}</Text>
+                    <br />
+                    <Text type="secondary">Barkod: {record.barcode}</Text>
+                    <br />
+                    <Text type="secondary">Adet: {record.count || 1}</Text>
+                </div>
+            ),
+        },
+        {
+            title: 'Tarih',
+            dataIndex: 'insertDate',
+            key: 'insertDate',
+            render: (date: string) => new Date(date).toLocaleString(),
+        },
+        {
+            title: 'Durum',
+            key: 'status',
+            render: (record: ProductionInstruction) => {
+                if (!selectedMachineId) return null;
+
+                const status = getInstructionStatus(record, selectedMachineId);
+                const machineAssignment = record.productionToMachines.find(m => m.machine.id === selectedMachineId);
+
+                let statusText = '';
+                let color = '';
+
+                switch(status) {
+                    case 0:
+                        statusText = 'Bekliyor';
+                        color = 'default';
+                        break;
+                    case 1:
+                        statusText = 'Aktif';
+                        color = 'processing';
+                        break;
+                    case 2:
+                        statusText = 'Tamamlandı';
+                        color = 'success';
+                        break;
+                    default:
+                        statusText = 'Bilinmiyor';
+                        color = 'warning';
+                }
+
+                return (
+                    <Space direction="vertical">
+                        <Tag color={color}>{statusText}</Tag>
+                        {machineAssignment?.entryDate && (
+                            <Text type="secondary">Giriş: {new Date(machineAssignment.entryDate).toLocaleTimeString()}</Text>
+                        )}
+                        {machineAssignment?.exitDate && (
+                            <Text type="secondary">Çıkış: {new Date(machineAssignment.exitDate).toLocaleTimeString()}</Text>
+                        )}
+                    </Space>
+                );
+            },
+        },
+        {
+            title: 'İşlemler',
+            key: 'actions',
+            render: (record: ProductionInstruction) => {
+                if (!selectedMachineId) return null;
+
+                const status = getInstructionStatus(record, selectedMachineId);
+
+                return (
+                    <Space>
+                        <Button
+                            type="primary"
+                            icon={<PlayCircleOutlined />}
+                            onClick={() => handleStartProcess(record)}
+                            disabled={status !== 0}
+                            loading={processing}
+                        >
+                            Başlat
+                        </Button>
+                        <Button
+                            type="primary"
+                            icon={<CheckCircleOutlined />}
+                            danger
+                            onClick={() => handleCompleteProcess(record)}
+                            disabled={status !== 1}
+                            loading={processing}
+                        >
+                            Tamamla
+                        </Button>
+                        <Button
+                            icon={<InfoCircleOutlined />}
+                            onClick={() => {
+                                setSelectedInstruction(record);
+                                setDetailModalVisible(true);
+                            }}
+                        >
+                            Detaylar
+                        </Button>
+                    </Space>
+                );
+            },
+        },
+    ];
 
     return (
-        <>
-            <HeaderComponent onToggleMenu={onToggleMenu}/>
-            <Layout style={{minHeight: '100vh', marginTop: 40}}>
-                <Header style={{background: '#fff', padding: '0 20px', boxShadow: '0 1px 4px rgba(0,21,41,.08)'}}>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        height: '100%'
-                    }}>
-                        <Title level={3} style={{margin: 0}}>
-                            <ToolOutlined/> Üretim Talimatı ve Makine Takip
-                        </Title>
-                        <Button
-                            icon={<ReloadOutlined/>}
-                            onClick={handleRefresh}
-                            loading={loading}
-                        >
-                            Yenile
-                        </Button>
-                    </div>
-                </Header>
-
-                <Content style={{padding: '20px'}}>
-                    {error && (
-                        <Alert
-                            message="Hata"
-                            description={error}
-                            type="error"
-                            showIcon
-                            style={{marginBottom: 16}}
-                            action={
-                                <Button size="small" danger onClick={handleRefresh}>
-                                    Tekrar Dene
-                                </Button>
-                            }
-                        />
-                    )}
-
-                    <Title level={4}>
-                        <InfoCircleOutlined/> İstasyonlar ve Üretim Durumları
-                    </Title>
-
-                    <Row gutter={[16, 16]}>
-                        {machines.map(machine => {
-                            const relatedProductions = findRelatedProductionsForMachine(machine.id);
-                            const activeProductions = relatedProductions.filter(p => p.isComplated === 0 && p.isDeleted === 0);
-
-                            return (
-                                <Col xs={24} sm={12} md={8} lg={6} key={machine.id}>
-                                    <Card
-                                        title={
-                                            <Space>
-                                                {machine.name}
-                                                <Badge
-                                                    count={activeProductions.length}
-                                                    style={{backgroundColor: activeProductions.length > 0 ? '#1890ff' : '#d9d9d9'}}
-                                                />
-                                            </Space>
-                                        }
-                                        extra={
-                                            machine.isOperational ? (
-                                                <Badge status="success" text="Çalışıyor"/>
-                                            ) : (
-                                                <Badge status="error" text="Çalışmıyor"/>
-                                            )
-                                        }
-                                        hoverable
-                                        onClick={() => handleMachineClick(machine)}
-                                        style={{height: '100%'}}
-                                    >
-                                        <Space direction="vertical" style={{width: '100%'}}>
-                                            <div>
-                                                <Text type="secondary">{machine.model}</Text>
-                                            </div>
-                                            <div>
-                                                <Text type="secondary">
-                                                    <ClockCircleOutlined/> Son Bakım:{' '}
-                                                    {new Date(machine.lastMaintenanceDate).toLocaleDateString('tr-TR')}
-                                                </Text>
-                                            </div>
-                                            <Divider style={{margin: '8px 0'}}/>
-                                            <div>
-                                                <Text strong>Aktif Talimatlar</Text>
-                                            </div>
-
-                                            {activeProductions.length > 0 ? (
-                                                activeProductions.map(prod => (
-                                                    <div
-                                                        key={prod.id}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleProductionClick(prod);
-                                                        }}
-                                                        style={{
-                                                            padding: '8px',
-                                                            border: '1px solid #f0f0f0',
-                                                            borderRadius: '4px',
-                                                            marginBottom: '8px',
-                                                            cursor: 'pointer',
-                                                            background: '#f9f9f9'
-                                                        }}
-                                                    >
-                                                        <Text ellipsis style={{
-                                                            width: '100%',
-                                                            display: 'block'
-                                                        }}>{prod.title}</Text>
-                                                        <Text type="secondary" style={{fontSize: '12px'}}>
-                                                            Oluşturulma: {new Date(prod.insertDate).toLocaleDateString('tr-TR')}
-                                                        </Text>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <Empty
-                                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                                    description="Aktif talimat yok"
-                                                    style={{margin: '8px 0'}}
-                                                />
-                                            )}
-                                        </Space>
-                                    </Card>
-                                </Col>
-                            );
-                        })}
-                    </Row>
-
-                    <Divider/>
-
-                    <Title level={4}>
-                        <InfoCircleOutlined/> Tüm Üretim Talimatları
-                    </Title>
-
-                    <Row gutter={[16, 16]}>
-                        {productions.map(production => (
-                            <Col xs={24} sm={12} md={8} lg={6} key={production.id}>
-                                <Card
-                                    title={production.title}
-                                    extra={
-                                        production.isComplated === 1 ? (
-                                            <Tag color="green">Tamamlandı</Tag>
-                                        ) : production.isDeleted === 1 ? (
-                                            <Tag color="red">İptal Edildi</Tag>
-                                        ) : !production.machineId || production.machineId === 0 ? (
-                                            <Tag color="red">Henüz Başlanmadı</Tag>
-                                        ) : (
-                                            <Tag color="blue">Devam Ediyor</Tag>
-                                        )
-                                    }
-                                    hoverable
-                                    onClick={() => handleProductionClick(production)}
-                                    style={{height: '100%'}}
-                                >
-                                    <Space direction="vertical" style={{width: '100%'}}>
-                                        <div>
-                                            <Text type="secondary">
-                                                Oluşturulma: {new Date(production.insertDate).toLocaleDateString('tr-TR')}
-                                            </Text>
-                                        </div>
-                                        {production.description && (
-                                            <div>
-                                                <Text ellipsis>{production.description}</Text>
-                                            </div>
-                                        )}
-                                        <Divider style={{margin: '8px 0'}}/>
-                                        <div>
-                                            <Text strong>Atanmış Makineler
-                                                ({production.productionToMachines.length})</Text>
-                                        </div>
-
-                                        {production.productionToMachines.length > 0 ? (
-                                            <Row gutter={[8, 8]}>
-                                                {production.productionToMachines.map(ptm => {
-                                                    const machine = machines.find(m => m.id === ptm.machineId);
-                                                    return (
-                                                        <Col span={24} key={ptm.id}>
-                                                            <div
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    machine && handleMachineClick(machine);
-                                                                }}
-                                                                style={{
-                                                                    padding: '6px',
-                                                                    border: '1px solid #f0f0f0',
-                                                                    borderRadius: '4px',
-                                                                    cursor: 'pointer',
-                                                                    display: 'flex',
-                                                                    justifyContent: 'space-between',
-                                                                    alignItems: 'center'
-                                                                }}
-                                                            >
-                                                                <Text ellipsis style={{maxWidth: '70%'}}>
-                                                                    {ptm.machine.name}
-                                                                </Text>
-                                                                {ptm.machine.isOperational ? (
-                                                                    <Badge status="success" text="Çalışıyor"/>
-                                                                ) : (
-                                                                    <Badge status="error" text="Durdu"/>
-                                                                )}
-                                                            </div>
-                                                        </Col>
-                                                    );
-                                                })}
-                                            </Row>
-                                        ) : (
-                                            <Empty
-                                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                                description="Makine atanmamış"
-                                                style={{margin: '8px 0'}}
-                                            />
-                                        )}
-                                    </Space>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
-                </Content>
-
-                <Drawer
-                    title={
-                        selectedItemType === 'machine'
-                            ? `Makine: ${(selectedItem as Machine)?.name}`
-                            : `Üretim Talimatı: ${(selectedItem as ProductionInstruction)?.title}`
-                    }
-                    placement="right"
-                    closable={true}
-                    onClose={closeDrawer}
-                    visible={drawerVisible}
-                    width={600}
+        <Layout style={{ minHeight: '100vh' }}>
+            <Sider width={280} className="site-layout-background">
+                <Menu
+                    mode="inline"
+                    selectedKeys={[String(selectedMachineId)]}
+                    onClick={(e) => setSelectedMachineId(Number(e.key))}
+                    style={{ height: '100%', borderRight: 0 }}
                 >
-                    {selectedItemType === 'machine' ? renderMachineDetails() : renderProductionDetails()}
-                </Drawer>
+                    {machineList.map((m) => {
+                        const activeCount = countActiveInstructions(m.machine.id);
+                        return (
+                            <Menu.Item key={m.machine.id}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>
+                                        {m.machine.name}
+                                    </span>
+                                    {activeCount > 0 && (
+                                        <Badge
+                                            count={activeCount}
+                                            style={{ backgroundColor: '#52c41a' }}
+                                        />
+                                    )}
+                                </div>
+                            </Menu.Item>
+                        );
+                    })}
+                </Menu>
+            </Sider>
+            <Layout style={{ padding: '24px' }}>
+                <Content
+                    style={{
+                        background: '#fff',
+                        padding: 24,
+                        margin: 0,
+                        minHeight: 'calc(100vh - 48px)',
+                    }}
+                >
+                    {loading ? (
+                        <Spin size="large" />
+                    ) : (
+                        <>
+                            <Title level={4} style={{ marginBottom: 24 }}>
+                                {machineList.find((m) => m.machine.id === selectedMachineId)?.machine.name} - Üretim Talimatları
+                            </Title>
+                            <Table
+                                dataSource={selectedMachineId ? getInstructionsForMachine(selectedMachineId) : []}
+                                columns={columns}
+                                rowKey="id"
+                                pagination={{ pageSize: 10 }}
+                                scroll={{ x: true }}
+                            />
+                        </>
+                    )}
+                </Content>
             </Layout>
-        </>
+
+            {/* Detay Modalı */}
+            <Modal
+                title={`Üretim Talimatı Detayları`}
+                visible={detailModalVisible}
+                onCancel={() => setDetailModalVisible(false)}
+                footer={null}
+                width={800}
+            >
+                {selectedInstruction && (
+                    <div>
+                        <Card title="Genel Bilgiler" style={{ marginBottom: 16 }}>
+                            <Descriptions bordered column={2}>
+                                <Descriptions.Item label="Başlık">{selectedInstruction.title}</Descriptions.Item>
+                                <Descriptions.Item label="Barkod">{selectedInstruction.barcode}</Descriptions.Item>
+                                <Descriptions.Item label="Açıklama" span={2}>
+                                    {selectedInstruction.description || 'Yok'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Adet">{selectedInstruction.count || 1}</Descriptions.Item>
+                                <Descriptions.Item label="Oluşturulma Tarihi">
+                                    {new Date(selectedInstruction.insertDate).toLocaleString()}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Genel Durum">
+                                    <Tag color={selectedInstruction.isComplated ? 'green' : 'orange'}>
+                                        {selectedInstruction.isComplated ? 'Tamamlandı' : 'Devam Ediyor'}
+                                    </Tag>
+                                </Descriptions.Item>
+                            </Descriptions>
+                        </Card>
+
+                        <Card title="Makine İş Akışı">
+                            {selectedInstruction.productionToMachines
+                                .sort((a, b) => a.line - b.line)
+                                .map((machine, index) => {
+                                    const status = getInstructionStatus(selectedInstruction, machine.machine.id);
+                                    let statusText = '';
+                                    let statusColor = '';
+
+                                    switch(status) {
+                                        case 0:
+                                            statusText = 'Bekliyor';
+                                            statusColor = 'default';
+                                            break;
+                                        case 1:
+                                            statusText = 'Aktif';
+                                            statusColor = 'processing';
+                                            break;
+                                        case 2:
+                                            statusText = 'Tamamlandı';
+                                            statusColor = 'success';
+                                            break;
+                                        default:
+                                            statusText = 'Bilinmiyor';
+                                            statusColor = 'warning';
+                                    }
+
+                                    return (
+                                        <div key={machine.id} style={{ marginBottom: 16 }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                marginBottom: 8
+                                            }}>
+                                                <Tag color={statusColor}>{statusText}</Tag>
+                                                <Text strong style={{ margin: '0 8px' }}>
+                                                    {machine.machine.name} (Hat {machine.line})
+                                                </Text>
+                                                {index < selectedInstruction.productionToMachines.length - 1 && (
+                                                    <ArrowRightOutlined style={{ margin: '0 8px' }} />
+                                                )}
+                                            </div>
+                                            <Descriptions bordered size="small" column={2}>
+                                                <Descriptions.Item label="Giriş Tarihi">
+                                                    {machine.entryDate ?
+                                                        new Date(machine.entryDate).toLocaleString() : 'Bekliyor'}
+                                                </Descriptions.Item>
+                                                <Descriptions.Item label="Çıkış Tarihi">
+                                                    {machine.exitDate ?
+                                                        new Date(machine.exitDate).toLocaleString() : 'Devam Ediyor'}
+                                                </Descriptions.Item>
+                                            </Descriptions>
+                                        </div>
+                                    );
+                                })
+                            }
+                        </Card>
+                    </div>
+                )}
+            </Modal>
+        </Layout>
     );
 };
 

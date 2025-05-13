@@ -417,7 +417,7 @@ function AppContent() {
                             path="/production-tracker"
                             element={
                                 <ProtectedRoute>
-                                    <ProductionMachineTracker onToggleMenu={handleToggleMenu}/>
+                                    <ProductionMachineTracker/>
                                 </ProtectedRoute>
                             }
                         />

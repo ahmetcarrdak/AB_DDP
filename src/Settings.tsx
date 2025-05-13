@@ -100,11 +100,7 @@ export const menus = [
         id: 3,
         title: "Üretim Yönetim",
         icon: icons.siparişYönetim,
-        action: "#",
-        subMenu: [
-            {id: 3.1, title: "Üretim Talimatları", action: "/production-instructions"},
-            {id: 3.2, title: "Üretim Durumları", action: "/production-tracker"},
-        ],
+        action: "/production-instructions",
     },
     {
         id: 2,
@@ -171,4 +167,8 @@ export const navMenus = [
         id: 2,
         title: "Üretim Durumları",
     },
+    {
+        id: 3,
+        title: "İş Bölümleri"
+    }
 ];
